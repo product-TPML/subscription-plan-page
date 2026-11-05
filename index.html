@@ -183,16 +183,20 @@
     box-shadow: 0 0 22px 0 rgba(0,0,0,.08); scroll-snap-align: center;
   }
   .t-card .t-quote { flex-shrink: 0; margin-bottom: 15px; }
-  /* 3-line clamp; min-height reserves 3 lines so every card is the same height */
+  /* 3-line clamp; min-height reserves 3 lines so every card is the same height.
+     "… See more" sits on the end of line 3, over a fade in the card colour */
+  .t-body { position: relative; min-height: 84px; margin-bottom: 15px; }
   .t-text {
-    margin: 0 0 6px; min-height: 84px; color: var(--navy-text); font: 400 16px/28px var(--t-text);
+    margin: 0; color: var(--navy-text); font: 400 16px/28px var(--t-text);
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden;
   }
   .t-more {
-    appearance: none; align-self: flex-start; height: 24px; margin: 0 0 12px; padding: 0; background: none; border: 0;
-    color: var(--gold); font: var(--t-name-w) 14px/24px var(--t-name); cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+    appearance: none; position: absolute; right: 0; bottom: 0; height: 28px; margin: 0; padding: 0 0 0 28px;
+    background: linear-gradient(to right, transparent, var(--light-beige) 24px); border: 0;
+    color: var(--navy-text); font: 400 16px/28px var(--t-text); cursor: pointer;
   }
-  .t-more[hidden] { display: block; visibility: hidden; }   /* keep the row so heights stay equal */
+  .t-more span { color: var(--gold); font-weight: var(--t-name-w); font-family: var(--t-name); text-decoration: underline; text-underline-offset: 3px; }
+  .t-more[hidden] { display: none; }
   .t-more:focus-visible, .t-close:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
   .t-author { display: flex; align-items: center; gap: 10px; margin-top: auto; }
   .avatar {
@@ -460,12 +464,16 @@
       { name: "Vivek Shanbhag", img: "dh-vivek-shanbhag.jpg", text: "Deccan Herald makes me feel that I belong to the city I live in by accurately portraying its realities and reflecting thoughtfully on them. Its constant engagement with the larger context of the nation and the world gives me a deeper sense of connection: to my city, my country and the world beyond." },
       { name: "P John J Kennedy", img: "dh-john-kennedy.jpg", text: "The layout and colors are pleasant to the eyes and so easy to read. Good job on the presentation!" },
       { name: "Megharikh NS", img: "dh-megharikh.jpg", text: "DH consistently maintains the integrity of news and views. Thank you for being a voice of people." },
+      // TEMP dummy — very long, to test the popup's scrolling + sticky header
+      { name: "Dummy Long Reader", img: "", text: "I have been reading the paper every morning for over twenty years, and what keeps me coming back is the consistency. The reporting is careful, the editorials are measured, and the city coverage makes me feel closer to the place I live in.\n\nThe digital subscription has changed how I read. I can open the e-paper before my first cup of tea, jump straight to the stories I care about, and save the ones I want to revisit. The premium articles are worth the price on their own: the long-form features, the explainers during election season, and the deep dives into issues that other outlets barely touch.\n\nWhat I appreciate most is the absence of clutter. Fewer ads, a clean layout and fast pages mean I actually finish what I start reading. During the recent budget week I followed every analysis piece back to back and never once felt overwhelmed.\n\nMy family shares the subscription across devices, and the archive has been a quiet bonus: my daughter found an old report for her college project in minutes. Thank you for keeping quality journalism alive, and please keep doing exactly what you are doing." },
     ],
     pv: [
       { name: "ನರಸಿಂಹಗೌಡ", img: "pv-narasimhagowda.jpg", text: "ಸಮತೋಲಿತ ದೃಷ್ಟಿಕೋನ ಮತ್ತು ನಿಷ್ಪಕ್ಷಪಾತ ಸುದ್ದಿಯನ್ನು ನೀಡುತ್ತಿದ್ದೀರಿ. ಪ್ರಜಾವಾಣಿ ಉತ್ತಮ ಸುದ್ದಿಪತ್ರಿಕೆ" },
       { name: "ರುದ್ರೇಶ್ವರ ಎಸ್", img: "pv-rudreshwara.jpg", text: "ಪುಟ ವಿನ್ಯಾಸ ಕಣ್ಣಿಗೆ ಹಿತ, ನೋಡಲು ಸುಂದರವಾಗಿ ಮತ್ತು ಓದಲು ಸುಲಭವಾಗಿದೆ. ಅದ್ಭುತವಾದ ಪ್ರಸ್ತುತಿ." },
       { name: "Nagaraju V", img: "pv-nagaraju-v.jpg", text: "ಎರಡು ದಶಕಗಳಿಂದ ಓದುಗನಾಗಿದ್ದೇನೆ. ಸುದ್ದಿ ಉತ್ತಮವಾಗಿದೆ. ಸಂಪಾದಕೀಯ ಸಮತೋಲಿತವಾಗಿದೆ. ಮುಂದುವರಿಸಿ" },
       { name: "Nagaraja K L", img: "pv-nagaraja-kl.jpg", text: "ವಿದೇಶದಲ್ಲಿರುವ ನಾವು ವಿಶ್ವಾಸಾರ್ಹ ಸುದ್ದಿಗಾಗಿ ಪ್ರಜಾವಾಣಿ ಇ–ಪೇಪರ್‌ ನೆಚ್ಚಿಕೊಂಡಿದ್ದೇವೆ. ಅದ್ಭುತವಾದ ದಿನಪತ್ರಿಕೆ" },
+      // TEMP dummy — very long, to test the popup's scrolling + sticky header
+      { name: "Dummy Long Reader", img: "", text: "ಎರಡು ದಶಕಗಳಿಂದ ಓದುಗನಾಗಿದ್ದೇನೆ. ಸುದ್ದಿ ಉತ್ತಮವಾಗಿದೆ. ಸಂಪಾದಕೀಯ ಸಮತೋಲಿತವಾಗಿದೆ. ಸಮತೋಲಿತ ದೃಷ್ಟಿಕೋನ ಮತ್ತು ನಿಷ್ಪಕ್ಷಪಾತ ಸುದ್ದಿಯನ್ನು ನೀಡುತ್ತಿದ್ದೀರಿ. ಪ್ರಜಾವಾಣಿ ಉತ್ತಮ ಸುದ್ದಿಪತ್ರಿಕೆ.\n\nಪುಟ ವಿನ್ಯಾಸ ಕಣ್ಣಿಗೆ ಹಿತ, ನೋಡಲು ಸುಂದರವಾಗಿ ಮತ್ತು ಓದಲು ಸುಲಭವಾಗಿದೆ. ಅದ್ಭುತವಾದ ಪ್ರಸ್ತುತಿ. ವಿದೇಶದಲ್ಲಿರುವ ನಾವು ವಿಶ್ವಾಸಾರ್ಹ ಸುದ್ದಿಗಾಗಿ ಪ್ರಜಾವಾಣಿ ಇ–ಪೇಪರ್‌ ನೆಚ್ಚಿಕೊಂಡಿದ್ದೇವೆ.\n\nಸಮತೋಲಿತ ದೃಷ್ಟಿಕೋನ ಮತ್ತು ನಿಷ್ಪಕ್ಷಪಾತ ಸುದ್ದಿಯನ್ನು ನೀಡುತ್ತಿದ್ದೀರಿ. ಪುಟ ವಿನ್ಯಾಸ ಕಣ್ಣಿಗೆ ಹಿತ, ನೋಡಲು ಸುಂದರವಾಗಿ ಮತ್ತು ಓದಲು ಸುಲಭವಾಗಿದೆ. ಎರಡು ದಶಕಗಳಿಂದ ಓದುಗನಾಗಿದ್ದೇನೆ. ಸುದ್ದಿ ಉತ್ತಮವಾಗಿದೆ. ಸಂಪಾದಕೀಯ ಸಮತೋಲಿತವಾಗಿದೆ. ಮುಂದುವರಿಸಿ.\n\nವಿದೇಶದಲ್ಲಿರುವ ನಾವು ವಿಶ್ವಾಸಾರ್ಹ ಸುದ್ದಿಗಾಗಿ ಪ್ರಜಾವಾಣಿ ಇ–ಪೇಪರ್‌ ನೆಚ್ಚಿಕೊಂಡಿದ್ದೇವೆ. ಅದ್ಭುತವಾದ ದಿನಪತ್ರಿಕೆ. ಪ್ರಜಾವಾಣಿ ಉತ್ತಮ ಸುದ್ದಿಪತ್ರಿಕೆ. ಸಮತೋಲಿತ ದೃಷ್ಟಿಕೋನ ಮತ್ತು ನಿಷ್ಪಕ್ಷಪಾತ ಸುದ್ದಿಯನ್ನು ನೀಡುತ್ತಿದ್ದೀರಿ. ಮುಂದುವರಿಸಿ." },
     ],
   };
 
@@ -647,6 +655,7 @@
 
   /* photo with an initials fallback if it fails to load */
   function avatar(t) {
+    if (!t.img) { const f = document.createElement("span"); f.className = "avatar"; f.textContent = initials(t.name); return f; }
     const img = document.createElement("img");
     img.className = "avatar"; img.alt = ""; img.width = img.height = 59;
     img.src = "Assets/testimonials/" + t.img;
@@ -662,8 +671,10 @@
     tTrack.innerHTML = tList.map((t, i) => `
       <article class="t-card">
         <svg class="t-quote" width="36" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M29.5485 8C34.1852 8 37.9367 11.6 37.9367 16C37.9367 20.4 34.143 24 29.5063 24C24.8696 24 21.0759 20.4 21.0759 16C21.0759 7.16 28.6211 0 37.9367 0C37.9367 0 32.4148 1.96 29.5485 8ZM16.8608 16C16.8608 20.4 13.0671 24 8.43038 24C3.79367 24 -3.8147e-06 20.4 -3.8147e-06 16C-3.8147e-06 7.16 7.54519 0 16.8608 0C16.8608 0 11.3389 1.96 8.47253 8C13.1092 8 16.8608 11.6 16.8608 16Z" fill="var(--gold)"></path></svg>
-        <p class="t-text">${esc(t.text)}</p>
-        <button type="button" class="t-more" data-i="${i}" aria-haspopup="dialog" hidden>See more</button>
+        <div class="t-body">
+          <p class="t-text">${esc(t.text)}</p>
+          <button type="button" class="t-more" data-i="${i}" aria-haspopup="dialog" aria-label="See more: ${esc(t.name)}" hidden>… <span>See more</span></button>
+        </div>
         <div class="t-author"><span class="t-name">${esc(t.name)}</span></div>
       </article>`).join("");
     tTrack.querySelectorAll(".t-author").forEach((a, i) => a.prepend(avatar(tList[i])));
