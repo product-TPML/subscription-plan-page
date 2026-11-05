@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan section — mobile wireframes</title>
+<style>
+  :root { --ink:#222; --mid:#777; --line:#bdbdbd; --fill:#ececec; --fill2:#f6f6f6; --accent:#444; --fold:#e0463a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: #fafafa; }
+  header.page { max-width: 1680px; margin: 0 auto; padding: 32px 24px 8px; }
+  header.page h1 { margin: 0 0 6px; font-size: 24px; }
+  header.page p { margin: 0; color: var(--mid); font-size: 14px; max-width: 900px; line-height: 1.5; }
+  .legend { display: flex; gap: 20px; margin-top: 12px; font-size: 13px; color: var(--mid); flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 22px; border-top: 2px dashed var(--fold); vertical-align: middle; margin-right: 6px; }
+
+  .board { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px 36px; padding: 24px; margin: 0 auto; align-items: flex-start; }
+  .col { flex: 0 0 360px; }
+  .col h2 { font-size: 16px; margin: 0 0 2px; min-height: 44px; }
+  .col .sub { font-size: 13px; color: var(--mid); margin: 0 0 12px; min-height: 54px; }
+  .tag-rec { display: inline-block; background: #222; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 6px; vertical-align: 2px; }
+
+  /* Phone frame: 360px wide = common Android CSS width */
+  .phone { position: relative; width: 360px; min-height: 720px; background: #fff; border: 2px solid #333; border-radius: 22px; overflow: hidden; }
+  .phone .content { padding-bottom: 16px; }
+  .fold { position: absolute; left: 0; right: 0; top: 640px; border-top: 2px dashed var(--fold); z-index: 5; pointer-events: none; }
+  .fold span { position: absolute; right: 8px; top: -20px; background: var(--fold); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+
+  .browser { height: 0; } /* fold measured from top of page content */
+  .hero { text-align: center; padding: 20px 16px 0; }
+  .hero .badge { display: inline-block; width: 124px; height: 28px; border: 1.5px solid var(--accent); border-radius: 4px; font-size: 14px; font-weight: 700; line-height: 25px; }
+  .hero .title { font-size: 24px; line-height: 32px; font-weight: 700; margin: 10px 0 0; }
+  .hero .subtitle { font-size: 14px; line-height: 26px; color: var(--mid); padding: 10px 0 20px; }
+
+  /* Generic wire pieces */
+  .card { border: 1.5px solid var(--line); border-radius: 6px; background: #fff; padding: 22px 20px; }
+  .card.short { padding: 12px 14px; }
+  .card.pop { border: 2px solid var(--accent); }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .pname { font-weight: 700; font-size: 18px; line-height: 26px; }
+  .price { font-weight: 800; font-size: 28px; }
+  .short .price, .opt .price { font-size: 22px; }
+  .price small { font-weight: 400; font-size: 14px; color: var(--mid); }
+  .short .price small { font-size: 12px; }
+  .meta { font-size: 12px; color: var(--mid); }
+  .strike { text-decoration: line-through; }
+  .pill { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; border: 1.5px solid var(--accent); border-radius: 8px; padding: 1px 6px; }
+  .btn { display: block; text-align: center; background: var(--fill); border: 1.5px solid var(--accent); border-radius: 6px; padding: 15px 10px; font-size: 16px; font-weight: 700; margin-top: 12px; }
+  .short .btn { padding: 11px 10px; margin-top: 8px; }
+  .btn.solid { background: #333; color: #fff; }
+  ul.b { margin: 12px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.6; }
+  .short ul.b { margin-top: 6px; font-size: 13px; line-height: 1.5; }
+  ul.b.extra li::marker { content: "+  "; font-weight: 700; }
+  .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--mid); margin-top: 8px; }
+  .common { margin: 14px 16px 0; padding: 12px; background: var(--fill2); border: 1.5px dashed var(--line); border-radius: 8px; }
+  .common h4 { margin: 0; font-size: 15px; }
+  .common ul { margin: 6px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.6; }
+  .block { margin: 16px 16px 0; height: 120px; background: var(--fill2); border: 1.5px solid var(--fill); border-radius: 8px; display: grid; place-items: center; font-size: 12px; color: var(--mid); }
+  .stack { display: grid; gap: 10px; padding: 0 16px; }
+
+  /* Swipe track */
+  .track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 16px 6px; scrollbar-width: none; }
+  .track::-webkit-scrollbar { display: none; }
+  .track > .card { scroll-snap-align: center; flex: 0 0 auto; }
+  .track.full > .card { width: 296px; }
+  .track.short > .card { width: 220px; }
+  .dots { display: flex; justify-content: center; gap: 4px; margin-top: 8px; }
+  .dots b { width: 8px; height: 8px; border-radius: 4px; background: var(--line); }
+  .dots b.on { width: 16px; background: var(--accent); }
+  .swipe-hint { text-align: center; font-size: 10px; color: var(--mid); margin-top: 4px; }
+
+  /* Option 2B: selectable rows */
+  .opt { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; background: #fff; }
+  .opt .radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; }
+  .opt.sel { border: 2px solid var(--accent); background: var(--fill2); }
+  .opt.sel .radio { border-color: var(--accent); }
+  .opt.sel .radio::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .opt .mid { flex: 1; }
+  .opt .extras { display: none; font-size: 11px; color: var(--ink); margin-top: 4px; }
+  .opt.sel .extras { display: block; }
+  .opt .right { text-align: right; }
+
+  /* Notes under each frame */
+  .notes { margin-top: 14px; font-size: 13px; line-height: 1.5; }
+  .notes .fit { font-weight: 700; margin-bottom: 6px; }
+  .notes ul { margin: 0 0 8px; padding-left: 18px; }
+  .notes .pro li::marker { content: "+  "; color: #1a7f3c; font-weight: 700; }
+  .notes .con li::marker { content: "–  "; color: var(--fold); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Plan section: mobile wireframes</h1>
+  <p>Lo-fi, greyscale, 360px-wide phone (the most common Android width). The red dashed line marks the bottom of a typical first screen (~640px of page visible after browser UI). Prices and benefits are placeholders. The swipe options really swipe, and 2B really selects.</p>
+  <div class="legend"><span><i></i>First fold (~640px)</span><span>“+” bullets = benefit specific to that plan</span><span>Grey dashed box = benefits shared by all plans</span></div>
+</header>
+
+<div class="board">
+
+  <!-- ===================== CURRENT ===================== -->
+  <div class="col">
+    <h2>Current (baseline)</h2>
+    <p class="sub">Full cards stacked vertically.</p>
+    <div class="phone">
+      <div class="fold"><span>FOLD</span></div>
+      <div class="content">
+        <div class="hero"><span class="badge">PREMIUM</span><div class="title">Subscribe to DH Premium</div><div class="subtitle">Choose the plan that works best for you</div></div>
+        <div class="stack">
+          <div class="card"><div class="pname">6 Months</div><div class="price">₹999 <small>/ 6 months</small></div>
+            <ul class="b"><li>Premium articles on web &amp; app</li><li>E-paper by 5 AM</li><li>All city editions</li><li>Ad-lite reading</li><li>6-month archive</li></ul><span class="btn">Subscribe</span></div>
+          <div class="card"><div class="pname">1 Year</div><div class="price">₹1299 <small>/ year</small></div>
+            <ul class="b"><li>Premium articles on web &amp; app</li><li>E-paper by 5 AM</li><li>All city editions</li><li>Ad-lite reading</li><li>1-year archive</li><li>7-day refund</li></ul><span class="btn">Subscribe</span></div>
+          <div class="card"><div class="pname">2 Years</div><div class="price">₹2099 <small>/ 2 years</small></div>
+            <ul class="b"><li>Premium articles on web &amp; app</li><li>E-paper by 5 AM</li><li>All city editions</li><li>Ad-lite reading</li><li>2-year archive</li><li>7-day refund</li></ul><span class="btn">Subscribe</span></div>
+        </div>
+        <div class="block">Why Choose DH Premium? …</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="fit">Plans visible above the fold: ~1.5 of 3</div>
+      <ul class="con"><li>The 2-year plan starts about a screen and a half down; even the 1-year button is below the fold</li><li>The same 4 benefits are repeated in every card, so the differences are hard to spot</li></ul>
+    </div>
+  </div>
+
+  <!-- ===================== OPTION 1 ===================== -->
+  <div class="col">
+    <h2>Option 1: Swipe full cards</h2>
+    <p class="sub">Same full cards in a horizontal carousel, with the next card peeking in.</p>
+    <div class="phone">
+      <div class="fold"><span>FOLD</span></div>
+      <div class="content">
+        <div class="hero"><span class="badge">PREMIUM</span><div class="title">Subscribe to DH Premium</div><div class="subtitle">Choose the plan that works best for you</div></div>
+        <div class="track full">
+          <div class="card"><div class="pname">6 Months</div><div class="price">₹999 <small>/ 6 months</small></div>
+            <ul class="b"><li>Premium articles on web &amp; app</li><li>E-paper by 5 AM</li><li>All city editions</li><li>Ad-lite reading</li><li>6-month archive</li></ul><span class="btn">Subscribe</span></div>
+          <div class="card pop"><span class="pill">Most popular</span><div class="pname">1 Year</div><div class="price">₹1299 <small>/ year</small></div>
+            <ul class="b"><li>Premium articles on web &amp; app</li><li>E-paper by 5 AM</li><li>All city editions</li><li>Ad-lite reading</li><li>1-year archive</li><li>7-day refund</li></ul><span class="btn">Subscribe</span></div>
+          <div class="card"><div class="pname">2 Years</div><div class="price">₹2099 <small>/ 2 years</small></div>
+            <ul class="b"><li>Premium articles on web &amp; app</li><li>E-paper by 5 AM</li><li>All city editions</li><li>Ad-lite reading</li><li>2-year archive</li><li>7-day refund</li></ul><span class="btn">Subscribe</span></div>
+        </div>
+        <div class="dots"><b class="on"></b><b></b><b></b></div>
+        <div class="block">Why Choose DH Premium? …</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="fit">Plans visible above the fold: 1 (+ a sliver of the 2nd)</div>
+      <ul class="pro"><li>The section is short, so the page below is reached sooner</li></ul>
+      <ul class="con"><li>Only one plan is readable at a time, so this isn't really side-by-side comparison</li><li>Many people never swipe, so the 2nd and 3rd plans get far fewer views</li><li>Becomes the third carousel on the page</li></ul>
+    </div>
+  </div>
+
+  <!-- ===================== OPTION 2 ===================== -->
+  <div class="col">
+    <h2>Option 2: Short stacked cards + common list <span class="tag-rec">RECOMMENDED</span></h2>
+    <p class="sub">Each card shows only what's different. Shared benefits are listed once, underneath.</p>
+    <div class="phone">
+      <div class="fold"><span>FOLD</span></div>
+      <div class="content">
+        <div class="hero"><span class="badge">PREMIUM</span><div class="title">Subscribe to DH Premium</div><div class="subtitle">Choose the plan that works best for you</div></div>
+        <div class="stack">
+          <div class="card short"><div class="row"><span class="pname">6 Months</span><span class="price">₹999 <small>/ 6 mo</small></span></div>
+            <div class="row meta"><span>₹5.5/day</span><span class="strike">₹1299</span></div>
+            <ul class="b extra"><li>6-month e-paper archive</li></ul><span class="btn">Subscribe</span></div>
+          <div class="card short pop"><div class="row"><span class="pname">1 Year <span class="pill">Popular</span></span><span class="price">₹1299 <small>/ yr</small></span></div>
+            <div class="row meta"><span>₹3.5/day</span><span class="strike">₹1999</span></div>
+            <ul class="b extra"><li>1-year archive · 7-day refund</li></ul><span class="btn">Subscribe</span></div>
+          <div class="card short"><div class="row"><span class="pname">2 Years</span><span class="price">₹2099 <small>/ 2 yr</small></span></div>
+            <div class="row meta"><span>₹2.9/day</span><span class="strike">₹2999</span></div>
+            <ul class="b extra"><li>2-year archive · 7-day refund</li></ul><span class="btn">Subscribe</span></div>
+        </div>
+        <div class="common"><h4>Included in every plan</h4>
+          <ul><li>Premium articles on web &amp; app</li><li>E-paper by 5 AM</li><li>All city editions</li><li>Ad-lite reading</li></ul></div>
+        <div class="block">Why Choose DH Premium? …</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="fit">Plans visible above the fold: 3 of 3</div>
+      <ul class="pro"><li>Every plan and price is visible without swiping or tapping</li><li>Comparison is a straight vertical scan: price, per-day cost, what's extra</li><li>Familiar pattern that needs nothing explained</li></ul>
+      <ul class="con"><li>Shared benefits fall below the fold, so readers must trust "included in every plan"</li><li>Each card's text has to stay short</li></ul>
+    </div>
+  </div>
+
+  <!-- ===================== OPTION 3 ===================== -->
+  <div class="col">
+    <h2>Option 3: Short cards, swipeable + common list</h2>
+    <p class="sub">Option 2's short cards in a carousel, about 1.5 cards visible.</p>
+    <div class="phone">
+      <div class="fold"><span>FOLD</span></div>
+      <div class="content">
+        <div class="hero"><span class="badge">PREMIUM</span><div class="title">Subscribe to DH Premium</div><div class="subtitle">Choose the plan that works best for you</div></div>
+        <div class="track short">
+          <div class="card short"><div class="pname">6 Months</div><div class="price">₹999 <small>/ 6 mo</small></div>
+            <div class="meta">₹5.5/day · <span class="strike">₹1299</span></div>
+            <ul class="b extra"><li>6-month archive</li></ul><span class="btn">Subscribe</span></div>
+          <div class="card short pop"><div class="pname">1 Year <span class="pill">Popular</span></div><div class="price">₹1299 <small>/ yr</small></div>
+            <div class="meta">₹3.5/day · <span class="strike">₹1999</span></div>
+            <ul class="b extra"><li>1-year archive</li><li>7-day refund</li></ul><span class="btn">Subscribe</span></div>
+          <div class="card short"><div class="pname">2 Years</div><div class="price">₹2099 <small>/ 2 yr</small></div>
+            <div class="meta">₹2.9/day · <span class="strike">₹2999</span></div>
+            <ul class="b extra"><li>2-year archive</li><li>7-day refund</li></ul><span class="btn">Subscribe</span></div>
+        </div>
+        <div class="dots"><b class="on"></b><b></b><b></b></div>
+        <div class="common"><h4>Included in every plan</h4>
+          <ul><li>Premium articles on web &amp; app</li><li>E-paper by 5 AM</li><li>All city editions</li><li>Ad-lite reading</li></ul></div>
+        <div class="block">Why Choose DH Premium? …</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="fit">Plans visible above the fold: 1.5 of 3 (the 3rd needs a swipe)</div>
+      <ul class="pro"><li>Shared benefits land above the fold</li><li>Most compact section overall</li></ul>
+      <ul class="con"><li>Still hides a plan behind a swipe, when the cards are short enough to stack anyway</li><li>Narrow cards squeeze the price and button</li><li>Which card to show first is a trade-off: start on 1 Year and the 6-month plan is off-screen to the left</li></ul>
+    </div>
+  </div>
+
+  <!-- ===================== OPTION 2B ===================== -->
+  <div class="col">
+    <h2>2B: Select a plan + one button <span class="tag-rec" style="background:#777">MY SUGGESTION</span></h2>
+    <p class="sub">A variant of Option 2: compact rows you tap to select, then one Subscribe button. Tap a row.</p>
+    <div class="phone">
+      <div class="fold"><span>FOLD</span></div>
+      <div class="content">
+        <div class="hero"><span class="badge">PREMIUM</span><div class="title">Subscribe to DH Premium</div><div class="subtitle">Choose the plan that works best for you</div></div>
+        <div class="stack" id="opt2b">
+          <div class="opt" data-price="₹999"><span class="radio"></span><div class="mid"><div class="pname">6 Months</div><div class="meta">₹5.5/day</div><div class="extras">+ 6-month archive</div></div><div class="right"><div class="price">₹999</div><div class="meta strike">₹1299</div></div></div>
+          <div class="opt sel" data-price="₹1299"><span class="radio"></span><div class="mid"><div class="pname">1 Year <span class="pill">Popular</span></div><div class="meta">₹3.5/day</div><div class="extras">+ 1-year archive · 7-day refund</div></div><div class="right"><div class="price">₹1299</div><div class="meta strike">₹1999</div></div></div>
+          <div class="opt" data-price="₹2099"><span class="radio"></span><div class="mid"><div class="pname">2 Years</div><div class="meta">₹2.9/day</div><div class="extras">+ 2-year archive · 7-day refund</div></div><div class="right"><div class="price">₹2099</div><div class="meta strike">₹2999</div></div></div>
+          <span class="btn solid" id="opt2b-btn">Subscribe for ₹1299</span>
+        </div>
+        <div class="common"><h4>Included in every plan</h4>
+          <ul><li>Premium articles on web &amp; app</li><li>E-paper by 5 AM</li><li>All city editions</li><li>Ad-lite reading</li></ul></div>
+        <div class="block">Why Choose DH Premium? …</div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="fit">Plans visible above the fold: 3 of 3, plus all the shared benefits</div>
+      <ul class="pro"><li>Shortest stacked layout, so shared benefits also get into the first screen</li><li>A default selection (1 Year) nudges toward the plan you want to sell</li></ul>
+      <ul class="con"><li>Adds a tap before subscribing (select, then press the button)</li><li>Departs further from the current desktop cards</li></ul>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Swipe dots follow the visible card
+  document.querySelectorAll(".track").forEach((t) => {
+    const dots = t.nextElementSibling.children;
+    t.addEventListener("scroll", () => {
+      const cards = [...t.children];
+      let best = 0, d = Infinity;
+      cards.forEach((c, i) => { const x = Math.abs(c.offsetLeft - t.offsetLeft - 16 - t.scrollLeft); if (x < d) { d = x; best = i; } });
+      if (t.scrollLeft + t.clientWidth >= t.scrollWidth - 2) best = cards.length - 1;
+      [...dots].forEach((b, i) => b.classList.toggle("on", i === best));
+    }, { passive: true });
+  });
+  // 2B: tap to select a plan
+  document.querySelectorAll("#opt2b .opt").forEach((o) => o.addEventListener("click", () => {
+    document.querySelectorAll("#opt2b .opt").forEach((x) => x.classList.toggle("sel", x === o));
+    document.getElementById("opt2b-btn").textContent = "Subscribe for " + o.dataset.price;
+  }));
+</script>
+</body>
+</html>

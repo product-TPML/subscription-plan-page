@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subscribe to DH Premium — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Roboto+Slab:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Colours and type tokens taken from deccanherald.com/subscribe */
+  :root {
+    --white: #fff;
+    --black: #000;
+    --mine-shaft: #333;
+    --faded-gray: #666;
+    --light-beige: #f5ebde;
+    --beige: #eeddc5;
+    --gold: #c78d3c;
+    --yellow: #ffd34d;
+    --navy-text: #1c2742;
+    --sans: Roboto, Oxygen, Ubuntu, Cantarell, -apple-system, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", sans-serif;
+    --slab: "Roboto Slab", serif;
+    --display: "Playfair Display", serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--white); color: var(--mine-shaft); font-family: var(--sans); }
+  h1, h2, h3, p { margin: 0; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 30px 20px 0; text-align: center; }
+  /* Badge artwork (yellow tag, gold border, Nandi icon and PREMIUM text) is all in the SVG */
+  .premium-badge { display: block; height: 28px; width: auto; margin: 0 auto; }
+  .hero h1 { margin-top: 15px; color: var(--gold); font: 700 32px/36px var(--display); }
+  .hero p { padding: 15px 15px 30px; color: var(--faded-gray); font: 400 14px/26px var(--sans); text-transform: capitalize; }
+
+  /* ---------- Master DH / PV switch (prototype control, fixed to the right edge) ---------- */
+  .brand-switch {
+    position: fixed; top: 50%; right: 0; transform: translateY(-50%); z-index: 50;
+    display: flex; flex-direction: column; gap: 4px; padding: 4px;
+    background: var(--white); border: 1px solid var(--beige); border-right: 0; border-radius: 8px 0 0 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  }
+  .brand-switch button {
+    appearance: none; width: 40px; height: 36px; padding: 0; border: 0; border-radius: 6px; cursor: pointer;
+    background: transparent; color: var(--faded-gray); font: 700 13px var(--slab);
+  }
+  .brand-switch button[aria-pressed="true"] { background: var(--gold); color: var(--white); }
+
+  /* ---------- Offering tabs (PV: Premium / E-Magazines) ---------- */
+  .offer-tabs {
+    display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 24px;
+    background: var(--light-beige); border: 1px solid var(--beige); border-radius: 8px;
+  }
+  .offer-tabs[hidden] { display: none; }
+  .offer-tabs button {
+    appearance: none; padding: 9px 22px; border: 1px solid transparent; border-radius: 6px; cursor: pointer;
+    background: transparent; color: var(--faded-gray); font: 600 15px var(--slab);
+  }
+  .offer-tabs button[aria-selected="true"] { background: var(--white); border-color: var(--gold); color: var(--black); }
+  .hero:has(.offer-tabs:not([hidden])) p { padding-bottom: 16px; }
+
+  /* ---------- Plan picker: shared benefits first, then selectable plans, one CTA ---------- */
+  .picker { max-width: 1018px; margin: 0 auto; padding: 0 20px; font-family: var(--slab); color: var(--black); }
+
+  .included { padding: 14px 20px; background: var(--light-beige); border: 1px solid var(--beige); border-radius: 6px; }
+  .included h2 { margin-bottom: 8px; font: 700 15px var(--slab); text-align: center; }
+  .included ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 28px; }
+  .included li { display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 22px; }
+  .included li svg { flex-shrink: 0; }
+
+  .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 16px 0 0; padding: 0; border: 0; }
+  .options legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .opt {
+    position: relative; display: flex; flex-direction: column; gap: 4px; padding: 20px; cursor: pointer;
+    background: var(--white); border: 1px solid var(--beige); border-radius: 6px; transition: border-color .15s, background .15s;
+  }
+  .opt:hover { border-color: var(--gold); }
+  .opt:has(input:checked) { border: 2px solid var(--gold); padding: 19px; background: #fffbf3; }
+  .opt:has(input:focus-visible) { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .radio {
+    width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--beige); background: var(--white);
+    display: grid; place-items: center;
+  }
+  .opt > .radio { position: absolute; top: 22px; right: 20px; }
+  .opt:has(input:checked) .radio { border-color: var(--gold); }
+  .opt:has(input:checked) .radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--gold); }
+  .opt-head { display: flex; align-items: center; gap: 10px; }
+  .opt-name { font-size: 18px; font-weight: 700; line-height: 26px; }
+  .opt-tag {
+    padding: 2px 8px; border-radius: 12px; background: var(--gold); color: var(--white);
+    font: 700 10px/16px var(--sans); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+  }
+  .opt-price { font-size: 28px; font-weight: 700; line-height: 1.2; margin-top: 6px; }
+  .opt-price small { font-size: 14px; font-weight: 400; color: var(--faded-gray); }
+  .opt-strike { font-size: 14px; color: #999; text-decoration: line-through; }
+  .opt-perday { font-size: 13px; color: var(--faded-gray); }
+  .opt-extras { margin-top: 6px; color: var(--gold); font-size: 13px; font-weight: 600; line-height: 20px; }
+
+  .cta {
+    display: flex; justify-content: center; align-items: center; width: 100%; max-width: 360px; margin: 20px auto 0;
+    padding: 15px 10px; border: 1px solid var(--gold); border-radius: 6px; background: var(--yellow); color: var(--black);
+    font: 700 16px/22px var(--slab); text-decoration: none; cursor: pointer;
+  }
+
+  /* ---------- Shared carousel ---------- */
+  .carousel { position: relative; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+  .carousel-arrow {
+    appearance: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 36px; height: 36px; z-index: 2; cursor: pointer;
+    background: var(--white); border: 1px solid #f8e7d3; border-radius: 6px; color: var(--gold);
+    transition: background .2s, border-color .2s;
+  }
+  .carousel-arrow:hover { background: #fafafa; border-color: var(--gold); }
+  .carousel-arrow.prev { margin-right: 9px; }
+  .carousel-arrow.next { margin-left: 9px; }
+  .track { display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; width: 100%; position: relative; }
+  .track::-webkit-scrollbar { display: none; }
+  .dots { display: flex; justify-content: center; gap: 5px; margin-top: 26px; }
+  .dots button {
+    appearance: none; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 7px;
+    background: var(--beige); cursor: pointer; transition: all .3s ease;
+  }
+  .dots button.active { width: 28px; background: var(--gold); }
+  .section-title { color: var(--black); font: 700 26px var(--display); text-align: center; margin-bottom: 11px; }
+
+  /* ---------- Why choose ---------- */
+  .why { padding-top: 39px; overflow: hidden; }
+  .why .track { gap: 24px; max-width: 1020px; padding: 12px 0; }
+  .why-card {
+    flex: 0 0 324px; width: 324px; display: flex; flex-direction: column; align-items: center; padding: 20px;
+    background: var(--white); border: 2px solid var(--light-beige); border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,.25); scroll-snap-align: center;
+  }
+  .why-card svg { flex-shrink: 0; margin-bottom: 10px; }
+  .why-card h3 { margin: 10px 0 3px; color: var(--black); font: 600 16px var(--slab); text-align: center; }
+  .why-card p { color: var(--black); font: 400 16px/22px var(--slab); text-align: center; opacity: .5; }
+
+  /* ---------- Stats ---------- */
+  .stats { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 151px; margin-top: 47px; background: var(--light-beige); color: var(--black); text-align: center; }
+  .stats strong { font: 700 42px var(--slab); margin-bottom: 10px; }
+  .stats span { font: 400 16px var(--sans); text-transform: capitalize; }
+
+  /* ---------- Testimonials ---------- */
+  .testimonials { padding-top: 48px; overflow: hidden; }
+  .testimonials .track { gap: 25px; max-width: 1022px; align-items: stretch; padding: 12px 0 22px; }
+  .t-card {
+    flex: 0 0 324px; width: 324px; display: flex; flex-direction: column; padding: 20px;
+    background: var(--light-beige); border: 1px solid var(--beige); border-radius: 12px;
+    box-shadow: 0 0 22px 0 rgba(0,0,0,.08); scroll-snap-align: center;
+  }
+  .t-card .t-quote { flex-shrink: 0; margin-bottom: 15px; }
+  .t-card p { flex-grow: 1; margin-bottom: 15px; color: var(--navy-text); font: 400 16px/28px var(--sans); }
+  .t-author { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 59px; height: 59px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+    background: var(--white); color: var(--gold); font: 700 18px var(--slab);
+  }
+  .t-name { color: var(--navy-text); font: 700 16px var(--slab); }
+
+  /* ---------- FAQ ---------- */
+  .faq { max-width: 1062px; margin: 43px auto 0; padding: 0 20px; }
+  .faq .section-title { margin-bottom: 13px; }
+  .faq-cats, .faq-cat, .faq-list { display: flex; flex-direction: column; gap: 10px; }
+  .faq-cat h3 { margin-bottom: 10px; color: var(--black); font: 600 18px var(--display); }
+  .faq-cat { gap: 0; }
+  .faq-item { padding: 15px 20px; background: var(--white); border: 1px solid var(--beige); border-radius: 8px; }
+  .faq-toggle {
+    appearance: none; display: flex; justify-content: space-between; align-items: center; width: 100%;
+    margin: 0; padding: 0; background: none; border: 0; text-align: left; cursor: pointer;
+  }
+  .faq-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 4px; }
+  .faq-q { padding-right: 20px; color: #000; font: 400 16px var(--slab); letter-spacing: -.32px; }
+  .faq-icon { display: flex; flex-shrink: 0; }
+  .faq-icon .minus { display: none; }
+  .faq-item.open .faq-icon .plus { display: none; }
+  .faq-item.open .faq-icon .minus { display: block; }
+  .faq-answer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease-out; }
+  .faq-answer > div { overflow: hidden; opacity: 0; transition: opacity .3s ease-out; }
+  .faq-item.open .faq-answer { grid-template-rows: 1fr; }
+  .faq-item.open .faq-answer > div { opacity: 1; }
+  .faq-answer p { margin: 20px 0 0; color: var(--mine-shaft); font: 400 14px/24px var(--slab); }
+
+  /* ---------- Contact ---------- */
+  .contact-wrap { margin: 14px 0 22px; padding: 20px 16px; }
+  .contact { display: flex; flex-direction: column; align-items: center; max-width: 1022px; margin: 0 auto; padding: 20px; background: var(--light-beige); border-radius: 8px; }
+  .contact-title { margin-bottom: 10px; color: var(--black); font: 400 16px var(--sans); text-transform: capitalize; }
+  .contact-title b { font-weight: 700; }
+  .contact-links { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; background: var(--white); border-radius: 22px; color: var(--black); font: 400 14px/23px var(--sans); text-decoration: none; }
+  .pill.mail { gap: 6px; }
+  .pill.mail span { text-decoration: underline; }
+  .hours { display: flex; flex-direction: column; align-items: center; font-size: 12px; text-align: center; }
+  .hours b { margin-bottom: 5px; color: var(--black); font: 500 12px/24px var(--sans); text-transform: capitalize; }
+  .hours span { color: rgba(0,0,0,.6); }
+
+  /* ---------- Mobile / tablet (same breakpoint as the live page) ---------- */
+  @media (max-width: 1024px) {
+    .hero { padding: 20px 16px 0; }
+    .premium-badge { height: 26px; }
+    .hero h1 { font-size: 24px; line-height: 32px; margin-top: 10px; }
+    .hero p { padding: 10px 0 20px; }
+
+    /* On phones the middle of the right edge would cover plan prices: sit level with the badge instead */
+    .brand-switch { top: 16px; transform: none; flex-direction: row; }
+    .brand-switch button { width: 34px; height: 32px; font-size: 12px; }
+    .offer-tabs { display: flex; width: 100%; margin-bottom: 16px; }
+    .offer-tabs button { flex: 1; padding: 8px 6px; font-size: 14px; }
+    .hero:has(.offer-tabs:not([hidden])) p { padding-bottom: 10px; }
+
+    /* Plan picker on mobile: compact rows, so benefits + all plans + CTA fit the first screen */
+    .picker { padding: 0 16px; }
+    .included { padding: 10px 12px; }
+    .included h2 { margin-bottom: 6px; font-size: 14px; }
+    .included ul { display: grid; grid-template-columns: repeat(2, max-content); gap: 2px 12px; justify-content: space-between; }
+    .included li { font-size: 13px; line-height: 20px; }
+    .options { grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
+    .opt {
+      display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "radio head price" "radio meta strike" "radio extras extras";
+      align-items: center; column-gap: 12px; row-gap: 0; padding: 10px 14px;
+    }
+    .opt:has(input:checked) { padding: 9px 13px; }
+    .opt > .radio { position: static; grid-area: radio; align-self: start; margin-top: 3px; }
+    .opt-head { grid-area: head; gap: 8px; }
+    .opt-name { font-size: 16px; line-height: 24px; }
+    .opt-price { grid-area: price; margin: 0; font-size: 20px; text-align: right; }
+    .opt-price small { display: none; }
+    .opt-perday { grid-area: meta; font-size: 12px; }
+    .opt-strike { grid-area: strike; font-size: 12px; text-align: right; }
+    .opt-extras { grid-area: extras; margin-top: 2px; font-size: 12px; line-height: 18px; }
+    .cta { max-width: none; margin-top: 12px; }
+
+    .section-title { font-size: 18px; margin-bottom: 20px; }
+    .carousel-arrow { display: none; }
+
+    .why { padding-top: 40px; }
+    .why .track { gap: 15px; padding: 0 16px; }
+    .why-card { flex: 0 0 calc(100vw - 32px); width: calc(100vw - 32px); padding: 0; background: transparent; border: 0; box-shadow: none; }
+    .why-card h3 { margin-bottom: 10px; }
+    .why-card p { color: var(--navy-text); }
+    .why .dots { margin: 10px 0 18px; }
+
+    .stats { height: auto; margin-top: 0; padding: 30px 20px; }
+    .stats strong { font-size: 36px; }
+
+    .testimonials { padding-top: 23px; }
+    .testimonials .section-title { margin-bottom: 13px; }
+    .testimonials .track { gap: 16px; padding: 0 16px; scroll-padding: 0 16px; }
+    .t-card { flex: 0 0 calc(100vw - 64px); width: calc(100vw - 64px); padding: 10px; }
+    .t-card:first-child { scroll-snap-align: start; }
+    .t-card:last-child { scroll-snap-align: end; }
+    .testimonials .dots { margin-top: 10px; }
+
+    .faq { margin-top: 28px; padding: 0 16px; }
+    .faq .section-title { margin-bottom: 20px; }
+    .faq-cat h3 { font-size: 17px; font-weight: 500; }
+    .faq-item { padding: 10px; }
+    .faq-q, .faq-answer p { font-size: 14px; }
+    .faq-answer p { line-height: 20px; margin-top: 10px; }
+
+    .contact-wrap { margin: 0; padding: 16px; }
+    .contact { border-radius: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Prototype-only master switch between the DH and PV versions -->
+<div class="brand-switch" role="group" aria-label="Page version">
+  <button type="button" data-brand="dh" aria-pressed="true">DH</button>
+  <button type="button" data-brand="pv" aria-pressed="false">PV</button>
+</div>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <img class="premium-badge" src="premium%20tag.svg" alt="Premium" width="135" height="28">
+  <h1 id="hero-title">Subscribe to DH Premium</h1>
+  <p>Choose the plan that works best for you</p>
+  <div class="offer-tabs" id="offer-tabs" role="tablist" aria-label="Offerings" hidden></div>
+</section>
+
+<!-- ================= PLANS ================= -->
+<section class="picker" aria-label="Plans">
+  <div class="included">
+    <h2>Every plan includes</h2>
+    <ul id="included-list"><!-- rendered from INCLUDED below --></ul>
+  </div>
+
+  <fieldset class="options" id="plan-options">
+    <legend>Choose a plan</legend>
+    <!-- rendered from PLANS below -->
+  </fieldset>
+
+  <a href="#" class="cta" id="plan-cta">Subscribe</a>
+</section>
+
+<!-- ================= WHY CHOOSE ================= -->
+<section class="why" aria-label="Why Choose Us">
+  <h2 class="section-title" id="why-title">Why Choose DH Premium?</h2>
+  <div class="carousel" data-carousel>
+    <button class="carousel-arrow prev" aria-label="Previous card"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="22" viewBox="0 0 13 22" fill="none"><path d="M0.0175781 10.833L10.834 21.6484L12.7393 19.7432L3.83691 10.8418L3.82812 10.833L12.7383 1.92285L10.833 0.0175781L0.0175781 10.833Z" fill="#C78D3C" stroke="#F8E7D3" stroke-width="0.025"></path></svg></button>
+    <div class="track">
+      <div class="why-card"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M67.8419 28.0969C67.8419 25.4463 67.8397 23.5528 67.6864 22.1048C67.5347 20.672 67.2475 19.8396 66.7911 19.2352C66.3514 18.6531 65.557 18.1169 63.9903 17.5094C62.4313 16.9049 60.3029 16.2987 57.3567 15.4617L57.3536 15.461C53.7744 14.433 50.2698 13.1598 46.8653 11.6508C44.9333 10.7936 43.5314 10.1716 42.4426 9.76101C41.3393 9.34485 40.6905 9.20005 40.2403 9.20005C39.7902 9.20013 39.1419 9.34493 38.0388 9.76101C36.95 10.1716 35.5489 10.7936 33.6169 11.6508C30.7605 12.9167 27.1861 14.3066 23.1247 15.461L23.1255 15.4617C20.179 16.3004 18.0508 16.9071 16.4919 17.5117C14.9253 18.1194 14.1303 18.6554 13.6888 19.2376C13.2332 19.8418 12.9458 20.6735 12.7942 22.1048C12.6409 23.5528 12.6395 25.4463 12.6395 28.0969V37.3868C12.6395 45.9977 16.5081 52.9209 21.4349 58.2579C26.3697 63.6037 32.3146 67.2972 36.3013 69.4016L36.9872 69.761C38.4658 70.5273 39.1499 70.7993 40.2403 70.7993C41.4867 70.7993 42.2025 70.4442 44.1801 69.4016L44.9497 68.9891C48.9059 66.8299 54.4201 63.2713 59.0465 58.2602C63.9732 52.9241 67.8419 46.001 67.8419 37.3868V28.0969ZM70.2419 37.3868C70.2419 46.7795 66.0092 54.2568 60.8098 59.8884C55.6189 65.5107 49.4132 69.3533 45.3005 71.5243L45.2997 71.525C43.3925 72.5304 42.1684 73.1993 40.2403 73.1993C38.3125 73.1992 37.0887 72.5304 35.1817 71.525L35.1809 71.5243C31.0681 69.3532 24.8625 65.5091 19.6716 59.886C14.4724 54.2538 10.2395 46.7764 10.2395 37.3868V28.0969C10.2395 25.4995 10.2377 23.4564 10.4075 21.8524C10.5789 20.2331 10.9383 18.8968 11.7747 17.7891L11.7762 17.7876C12.6307 16.6609 13.9441 15.9258 15.6239 15.2743C17.3116 14.6196 19.5682 13.9786 22.4685 13.1532C26.4009 12.0355 29.8676 10.6865 32.6434 9.45629C34.5482 8.61117 36.0238 7.95623 37.1919 7.51567C38.3453 7.08067 39.3337 6.80011 40.2403 6.80005C41.147 6.80005 42.1361 7.08061 43.2895 7.51567C44.4573 7.95614 45.9323 8.61141 47.8364 9.45629C51.1403 10.9207 54.5426 12.1563 58.0161 13.154C60.9148 13.9774 63.1705 14.6174 64.8583 15.2719C66.5386 15.9235 67.8536 16.6592 68.7067 17.7891C69.5431 18.8968 69.9017 20.2331 70.0731 21.8524C70.2429 23.4564 70.2419 25.4995 70.2419 28.0969V37.3868Z" fill="#C78D3C"></path><path d="M52.6177 36.9635V27.5272H54.7586V36.9635H52.6177ZM48.97 33.3159V31.1749H58.4064V33.3159H48.97Z" fill="#C78D3C"></path><path d="M41.1767 39.3909C40.2676 39.3909 39.454 39.2204 38.7357 38.8795C38.0176 38.5341 37.4471 38.0614 37.0244 37.4614C36.6062 36.8614 36.3835 36.175 36.3562 35.4022H38.8108C38.8562 35.975 39.104 36.4431 39.554 36.8068C40.004 37.1658 40.5448 37.3454 41.1767 37.3454C41.6721 37.3454 42.113 37.2318 42.4994 37.0045C42.8857 36.7772 43.1903 36.4614 43.413 36.0568C43.6357 35.6522 43.7448 35.1909 43.7403 34.6727C43.7448 34.1454 43.6335 33.6772 43.4062 33.2682C43.1789 32.859 42.8676 32.5386 42.4721 32.3068C42.0767 32.0704 41.6221 31.9522 41.1085 31.9522C40.6903 31.9477 40.2789 32.025 39.8744 32.1841C39.4699 32.3431 39.1494 32.5522 38.913 32.8114L36.6289 32.4363L37.3585 25.2363H45.4585V27.35H39.4516L39.0494 31.0522H39.1312C39.3903 30.7477 39.7562 30.4954 40.2289 30.2954C40.7016 30.0909 41.2199 29.9886 41.7835 29.9886C42.6289 29.9886 43.3835 30.1886 44.0471 30.5886C44.7108 30.9841 45.2335 31.5295 45.6153 32.225C45.9971 32.9204 46.188 33.7158 46.188 34.6114C46.188 35.5341 45.9744 36.3568 45.5471 37.0795C45.1244 37.7977 44.5357 38.3636 43.7812 38.7772C43.0312 39.1863 42.163 39.3909 41.1767 39.3909Z" fill="#C78D3C"></path><path d="M25.7524 39.2L31.6911 27.4454V27.35H24.7979V25.2363H34.3092V27.3977L28.3774 39.2H25.7524Z" fill="#C78D3C"></path><path d="M52.4302 49.8568L51.1006 49.9385C51.0779 49.8249 51.0291 49.7227 50.954 49.6317C50.8791 49.5385 50.7802 49.4647 50.6575 49.4101C50.537 49.3533 50.3927 49.3249 50.2245 49.3249C49.9995 49.3249 49.8097 49.3727 49.6552 49.4681C49.5006 49.5613 49.4234 49.6863 49.4234 49.8431C49.4234 49.9681 49.4734 50.0738 49.5734 50.1601C49.6734 50.2465 49.8449 50.3158 50.0881 50.3681L51.0359 50.559C51.5449 50.6636 51.9245 50.8317 52.1745 51.0636C52.4245 51.2954 52.5495 51.5999 52.5495 51.9772C52.5495 52.3204 52.4484 52.6215 52.2461 52.8806C52.0461 53.1397 51.7711 53.342 51.4211 53.4874C51.0734 53.6306 50.6722 53.7022 50.2176 53.7022C49.5245 53.7022 48.9722 53.5579 48.5608 53.2693C48.1518 52.9784 47.912 52.5828 47.8416 52.0828L49.27 52.0079C49.3132 52.2193 49.4177 52.3806 49.5836 52.492C49.7495 52.6011 49.962 52.6556 50.2211 52.6556C50.4756 52.6556 50.6802 52.6068 50.8348 52.509C50.9916 52.409 51.0711 52.2806 51.0734 52.1238C51.0711 51.992 51.0154 51.8841 50.9063 51.7999C50.7972 51.7136 50.6291 51.6476 50.4018 51.6022L49.4949 51.4215C48.9836 51.3193 48.6029 51.142 48.3529 50.8897C48.1052 50.6374 47.9813 50.3158 47.9813 49.9249C47.9813 49.5885 48.0722 49.2988 48.254 49.0556C48.4381 48.8124 48.6961 48.6249 49.0279 48.4931C49.362 48.3613 49.7529 48.2954 50.2006 48.2954C50.862 48.2954 51.3824 48.4352 51.762 48.7147C52.1438 48.9942 52.3665 49.3749 52.4302 49.8568Z" fill="#C78D3C"></path><path d="M44.1453 53.6001V48.3637H45.5533V49.2773H45.6077C45.7033 48.9524 45.8634 48.7069 46.0885 48.541C46.3134 48.3729 46.5725 48.2887 46.8657 48.2887C46.9385 48.2887 47.0169 48.2933 47.1009 48.3024C47.185 48.3114 47.2589 48.324 47.3225 48.3399V49.6285C47.2544 49.6081 47.1601 49.5899 47.0396 49.574C46.9191 49.5581 46.8089 49.5501 46.7089 49.5501C46.4953 49.5501 46.3044 49.5967 46.1362 49.6899C45.9703 49.7808 45.8385 49.9081 45.7407 50.0717C45.6453 50.2353 45.5976 50.424 45.5976 50.6376V53.6001H44.1453Z" fill="#C78D3C"></path><path d="M40.0697 53.6988C39.7356 53.6988 39.4379 53.6408 39.1765 53.5249C38.9151 53.4068 38.7083 53.2329 38.556 53.0033C38.406 52.7715 38.3311 52.4828 38.3311 52.1374C38.3311 51.8465 38.3845 51.6022 38.4913 51.4044C38.5981 51.2068 38.7435 51.0476 38.9276 50.9272C39.1117 50.8068 39.3208 50.7158 39.5549 50.6544C39.7913 50.5931 40.039 50.5499 40.2981 50.5249C40.6027 50.4931 40.8481 50.4636 41.0345 50.4363C41.2208 50.4068 41.356 50.3636 41.4402 50.3068C41.5243 50.2499 41.5663 50.1658 41.5663 50.0544V50.034C41.5663 49.8181 41.4981 49.6511 41.3617 49.5328C41.2276 49.4147 41.0367 49.3556 40.789 49.3556C40.5276 49.3556 40.3197 49.4136 40.1651 49.5295C40.0106 49.6431 39.9083 49.7863 39.8583 49.959L38.5151 49.8499C38.5833 49.5317 38.7175 49.2568 38.9175 49.0249C39.1175 48.7908 39.3754 48.6112 39.6913 48.4863C40.0095 48.359 40.3776 48.2954 40.7959 48.2954C41.0867 48.2954 41.3651 48.3295 41.6311 48.3977C41.8992 48.4658 42.1367 48.5715 42.3435 48.7147C42.5527 48.8579 42.7175 49.042 42.8379 49.267C42.9583 49.4897 43.0186 49.7568 43.0186 50.0681V53.5999H41.6413V52.8738H41.6003C41.5163 53.0374 41.4038 53.1817 41.2629 53.3068C41.1219 53.4295 40.9527 53.526 40.7549 53.5965C40.5572 53.6647 40.3288 53.6988 40.0697 53.6988ZM40.4856 52.6965C40.6992 52.6965 40.8879 52.6544 41.0515 52.5704C41.2151 52.484 41.3435 52.3681 41.4367 52.2227C41.5299 52.0772 41.5765 51.9124 41.5765 51.7284V51.1727C41.5311 51.2022 41.4686 51.2295 41.389 51.2544C41.3117 51.2772 41.2243 51.2988 41.1265 51.3193C41.0288 51.3374 40.9311 51.3544 40.8333 51.3704C40.7356 51.384 40.647 51.3965 40.5675 51.4079C40.397 51.4329 40.2481 51.4727 40.1208 51.5272C39.9935 51.5817 39.8947 51.6556 39.8243 51.7488C39.7538 51.8397 39.7186 51.9533 39.7186 52.0897C39.7186 52.2874 39.7902 52.4385 39.9333 52.5431C40.0788 52.6454 40.2629 52.6965 40.4856 52.6965Z" fill="#C78D3C"></path><path d="M35.2252 53.7022C34.6866 53.7022 34.2229 53.5931 33.8342 53.3749C33.4479 53.1544 33.1502 52.8431 32.9411 52.4409C32.732 52.0363 32.6274 51.5579 32.6274 51.0056C32.6274 50.467 32.732 49.9942 32.9411 49.5874C33.1502 49.1806 33.4445 48.8636 33.8241 48.6363C34.2058 48.409 34.6536 48.2954 35.1672 48.2954C35.5127 48.2954 35.8342 48.3511 36.132 48.4624C36.432 48.5715 36.6934 48.7363 36.9161 48.9568C37.1411 49.1772 37.3161 49.4544 37.4411 49.7885C37.5661 50.1204 37.6286 50.509 37.6286 50.9544V51.3533H33.207V50.4533H36.2615C36.2615 50.2442 36.2161 50.059 36.1252 49.8977C36.0342 49.7363 35.9082 49.6101 35.7468 49.5193C35.5877 49.4261 35.4025 49.3795 35.1911 49.3795C34.9706 49.3795 34.7752 49.4306 34.6047 49.5328C34.4366 49.6328 34.3047 49.7681 34.2093 49.9385C34.1138 50.1068 34.065 50.2942 34.0627 50.5011V51.3568C34.0627 51.6158 34.1104 51.8397 34.2058 52.0284C34.3036 52.217 34.4411 52.3625 34.6184 52.4647C34.7957 52.567 35.0058 52.6181 35.249 52.6181C35.4104 52.6181 35.5582 52.5954 35.6922 52.5499C35.8263 52.5045 35.9411 52.4363 36.0366 52.3454C36.132 52.2545 36.2047 52.1431 36.2547 52.0112L37.5979 52.0999C37.5298 52.4227 37.3899 52.7045 37.1786 52.9454C36.9695 53.1841 36.699 53.3704 36.3672 53.5044C36.0377 53.6363 35.657 53.7022 35.2252 53.7022Z" fill="#C78D3C"></path><path d="M26.5977 46.6182H28.2511L29.8431 49.625H29.9113L31.5033 46.6182H33.1568L30.6101 51.1318V53.6H29.1442V51.1318L26.5977 46.6182Z" fill="#C78D3C"></path></svg><h3>Legacy in Journalism</h3><p>Placeholder text describing this benefit in a line or two.</p></div>
+      <div class="why-card"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M29.6001 15.6C29.6001 14.9373 30.1374 14.4 30.8001 14.4H51.6001C52.2628 14.4 52.8001 14.9373 52.8001 15.6C52.8001 16.2627 52.2628 16.8 51.6001 16.8H30.8001C30.1374 16.8 29.6001 16.2627 29.6001 15.6Z" fill="#C78D3C"></path><path d="M29.6001 24.4C29.6001 23.7372 30.1374 23.2 30.8001 23.2H51.6001C52.2628 23.2 52.8001 23.7372 52.8001 24.4C52.8001 25.0627 52.2628 25.6 51.6001 25.6H30.8001C30.1374 25.6 29.6001 25.0627 29.6001 24.4Z" fill="#C78D3C"></path><path d="M13.6001 33.2C13.6001 32.5373 14.1374 32 14.8001 32H51.6001C52.2628 32 52.8001 32.5373 52.8001 33.2C52.8001 33.8627 52.2628 34.4 51.6001 34.4H14.8001C14.1374 34.4 13.6001 33.8627 13.6001 33.2Z" fill="#C78D3C"></path><path d="M13.6001 42C13.6001 41.3373 14.1374 40.8 14.8001 40.8H44.4001C45.0628 40.8 45.6001 41.3373 45.6001 42C45.6001 42.6628 45.0628 43.2 44.4001 43.2H14.8001C14.1374 43.2 13.6001 42.6628 13.6001 42Z" fill="#C78D3C"></path><path d="M13.6001 50.8C13.6001 50.1373 14.1374 49.6 14.8001 49.6H34.8001C35.4628 49.6 36.0001 50.1373 36.0001 50.8C36.0001 51.4627 35.4628 52 34.8001 52H14.8001C14.1374 52 13.6001 51.4627 13.6001 50.8Z" fill="#C78D3C"></path><path d="M71.6 55.257C71.5999 54.2543 70.7976 53.4711 69.8742 53.4711H50.1258C49.2024 53.4711 48.4001 54.2543 48.4 55.257V68.3211C48.4001 70.1448 49.8604 71.5998 51.5883 71.5999H68.4117C70.1396 71.5998 71.5999 70.1448 71.6 68.3211V55.257ZM60.6289 59.7359C60.6288 59.5515 60.5566 59.3793 60.4359 59.2562C60.3161 59.1339 60.1587 59.0703 60 59.0703C59.8413 59.0703 59.6839 59.1339 59.5641 59.2562C59.4434 59.3793 59.3712 59.5515 59.3711 59.7359C59.3711 59.9204 59.4434 60.0932 59.5641 60.2163C59.6839 60.3386 59.8414 60.4023 60 60.4023C60.1586 60.4023 60.3161 60.3386 60.4359 60.2163C60.5566 60.0932 60.6289 59.9204 60.6289 59.7359ZM63.0289 59.7359C63.0289 60.5412 62.7151 61.3184 62.15 61.8953C61.8756 62.1753 61.5525 62.3967 61.2 62.5507V67.2015C61.1998 67.8641 60.6626 68.4015 60 68.4015C59.3374 68.4015 58.8002 67.8641 58.8 67.2015V62.5507C58.4475 62.3967 58.1244 62.1753 57.85 61.8953C57.2849 61.3184 56.9711 60.5412 56.9711 59.7359C56.9712 58.9306 57.2849 58.1533 57.85 57.5765C58.416 56.999 59.1889 56.6703 60 56.6703C60.8111 56.6703 61.584 56.999 62.15 57.5765C62.7151 58.1533 63.0288 58.9306 63.0289 59.7359ZM74 68.3211C73.9999 71.4239 71.511 73.9998 68.4117 73.9999H51.5883C48.489 73.9998 46.0001 71.4239 46 68.3211V55.257C46.0001 52.9752 47.831 51.0711 50.1258 51.0711H51.4859V46.6726C51.4842 44.5694 52.234 42.5341 53.6008 40.9491C54.9683 39.3635 56.8603 38.337 58.9242 38.0695C60.9883 37.8019 63.0748 38.313 64.7914 39.5023C66.5074 40.6912 67.7341 42.4747 68.2477 44.5132C68.4094 45.1557 68.0197 45.8075 67.3774 45.9695C66.7347 46.1314 66.0822 45.7419 65.9203 45.0991C65.5466 43.6159 64.6569 42.3285 63.425 41.475C62.1938 40.6219 60.7033 40.2586 59.2328 40.4491C57.7621 40.6398 56.4045 41.3724 55.418 42.5163C54.431 43.6609 53.8845 45.1382 53.8859 46.6711V51.0711H69.8742C72.169 51.0711 73.9999 52.9752 74 55.257V68.3211Z" fill="#C78D3C"></path><path d="M57.1296 6.40862C60.511 6.58021 63.1999 9.37594 63.1999 12.8V35.2H60.7999V12.8C60.7999 10.5909 59.009 8.80002 56.7999 8.80002H12.7999C10.5908 8.80002 8.7999 10.5909 8.7999 12.8V57.6C8.7999 59.8091 10.5908 61.6 12.7999 61.6H42.9905V64H12.7999C9.37582 64 6.58009 61.3111 6.40849 57.9297L6.3999 57.6V12.8C6.3999 9.37594 9.08878 6.58021 12.4702 6.40862L12.7999 6.40002H56.7999L57.1296 6.40862Z" fill="#C78D3C"></path><path d="M20 13.2C20.4651 13.2 20.8881 13.4688 21.0859 13.8898L22.7914 17.5242L26.5804 18.1016C27.0252 18.1693 27.3954 18.4803 27.5382 18.907C27.681 19.3336 27.5729 19.8047 27.2585 20.1265L24.4765 22.9734L25.1351 27.007C25.2091 27.4607 25.0173 27.9166 24.6414 28.1812C24.2655 28.4456 23.7716 28.4727 23.3695 28.25L20.0031 26.3844L16.6296 28.25C16.2275 28.4723 15.7334 28.4458 15.3578 28.1812C14.9821 27.9166 14.7909 27.4605 14.8648 27.007L15.5226 22.9734L12.7414 20.1265C12.427 19.8047 12.3189 19.3336 12.4616 18.907C12.6045 18.4803 12.9747 18.1693 13.4195 18.1016L17.2078 17.5242L18.914 13.8898L18.9531 13.8132C19.1641 13.4364 19.5636 13.2 20 13.2ZM19.1085 19.1242C18.9384 19.4864 18.5988 19.7404 18.2031 19.8008L16.0921 20.1218L17.6624 21.7296C17.9288 22.0022 18.0503 22.3848 17.989 22.7609L17.6312 24.9539L19.4242 23.9632L19.5624 23.8976C19.8937 23.7663 20.2696 23.788 20.5859 23.9632L22.368 24.95L22.0109 22.7609C21.9496 22.3848 22.0712 22.0022 22.3375 21.7296L23.907 20.1218L21.7968 19.8008C21.4012 19.7404 21.0615 19.4864 20.8914 19.1242L20 17.2242L19.1085 19.1242Z" fill="#C78D3C"></path></svg><h3>Exclusive Stories</h3><p>Placeholder text describing this benefit in a line or two.</p></div>
+      <div class="why-card"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M71.6 27.8906C71.5998 26.343 70.3182 25.0547 68.7 25.0547H57.6V61.5273C57.6 63.344 58.333 65.09 59.6438 66.3804C60.9551 67.6714 62.7375 68.3999 64.6 68.3999C66.4625 68.3999 68.2449 67.6714 69.5562 66.3804C70.867 65.09 71.6 63.344 71.6 61.5273V27.8906ZM45.4664 55.5632C46.129 55.5632 46.6662 56.1007 46.6664 56.7632C46.6664 57.4259 46.1291 57.9632 45.4664 57.9632H18.1336C17.4709 57.9632 16.9336 57.4259 16.9336 56.7632C16.9338 56.1007 17.471 55.5632 18.1336 55.5632H45.4664ZM45.4664 49.5999C46.1291 49.5999 46.6664 50.1372 46.6664 50.7999C46.6664 51.4627 46.1291 51.9999 45.4664 51.9999H18.1336C17.4709 51.9999 16.9336 51.4627 16.9336 50.7999C16.9336 50.1372 17.4709 49.5999 18.1336 49.5999H45.4664ZM45.4664 43.7452C46.1291 43.7452 46.6663 44.2826 46.6664 44.9452C46.6664 45.608 46.1291 46.1452 45.4664 46.1452H18.1336C17.4709 46.1452 16.9336 45.608 16.9336 44.9452C16.9337 44.2826 17.4709 43.7452 18.1336 43.7452H45.4664ZM45.4664 37.782C46.1291 37.782 46.6664 38.3192 46.6664 38.982C46.6663 39.6446 46.129 40.182 45.4664 40.182H18.1336C17.471 40.182 16.9337 39.6446 16.9336 38.982C16.9336 38.3192 17.4709 37.782 18.1336 37.782H45.4664ZM29.0664 21.0547C29.7291 21.0547 30.2664 21.5919 30.2664 22.2547V33.0179C30.2664 33.6807 29.7291 34.2179 29.0664 34.2179H18.1336C17.4709 34.2179 16.9336 33.6807 16.9336 33.0179V22.2547C16.9336 21.5919 17.4709 21.0547 18.1336 21.0547H29.0664ZM45.4664 31.8179C46.129 31.8179 46.6663 32.3553 46.6664 33.0179C46.6664 33.6807 46.1291 34.2179 45.4664 34.2179H34.8C34.1373 34.2179 33.6 33.6807 33.6 33.0179C33.6001 32.3553 34.1374 31.8179 34.8 31.8179H45.4664ZM19.3336 31.8179H27.8664V23.4547H19.3336V31.8179ZM45.4664 26.4C46.1291 26.4 46.6664 26.9372 46.6664 27.6C46.6664 28.2627 46.1291 28.8 45.4664 28.8H34.8C34.1373 28.8 33.6 28.2627 33.6 27.6C33.6 26.9372 34.1373 26.4 34.8 26.4H45.4664ZM45.4664 21.0547C46.1291 21.0547 46.6664 21.5919 46.6664 22.2547C46.6663 22.9173 46.1291 23.4547 45.4664 23.4547H34.8C34.1373 23.4547 33.6001 22.9173 33.6 22.2547C33.6 21.5919 34.1373 21.0547 34.8 21.0547H45.4664ZM55.2 14.4367C55.2 12.889 53.9182 11.6 52.3 11.6H11.3C9.68176 11.6 8.4 12.889 8.4 14.4367V61.5273C8.4 63.344 9.13304 65.09 10.4438 66.3804C11.7551 67.6714 13.5375 68.3999 15.4 68.3999H58.2898C58.1777 68.2997 58.0678 68.1965 57.9602 68.0906C56.1953 66.3531 55.2 63.9927 55.2 61.5273V14.4367ZM57.6 22.6547H68.7C71.6081 22.6547 73.9998 24.9823 74 27.8906V61.5273C74 63.9927 73.0047 66.3531 71.2398 68.0906C69.4756 69.8274 67.087 70.7999 64.6 70.7999H15.4C12.913 70.7999 10.5244 69.8273 8.76016 68.0906C6.9953 66.3531 6.00002 63.9927 6 61.5273V14.4367C6 11.5282 8.39184 9.19995 11.3 9.19995H52.3C55.2082 9.19995 57.6 11.5282 57.6 14.4367V22.6547Z" fill="#C78D3C"></path></svg><h3>Access to E-paper</h3><p>Placeholder text describing this benefit in a line or two.</p></div>
+      <div class="why-card"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M71.1999 40C71.1999 22.7687 57.2312 8.80002 39.9999 8.80002C22.7686 8.80002 8.7999 22.7687 8.7999 40C8.7999 57.2313 22.7686 71.2 39.9999 71.2V73.6C21.4431 73.6 6.3999 58.5568 6.3999 40C6.3999 21.4432 21.4431 6.40002 39.9999 6.40002C58.5567 6.40002 73.5999 21.4432 73.5999 40C73.5999 58.5568 58.5567 73.6 39.9999 73.6V71.2C57.2312 71.2 71.1999 57.2313 71.1999 40Z" fill="#C78D3C"></path><path d="M56.8 30.4C56.8 29.9581 56.4418 29.6 56 29.6H23.2C22.7582 29.6 22.4 29.9581 22.4 30.4V49.6C22.4 50.0418 22.7582 50.4 23.2 50.4H56C56.4418 50.4 56.8 50.0418 56.8 49.6V30.4ZM59.2 49.6C59.2 51.3673 57.7673 52.8 56 52.8H23.2C21.4327 52.8 20 51.3673 20 49.6V30.4C20 28.6326 21.4327 27.2 23.2 27.2H56C57.7673 27.2 59.2 28.6326 59.2 30.4V49.6Z" fill="#C78D3C"></path><path d="M44.9146 45.8182H40.9714V34.1819H44.9942C46.1494 34.1819 47.1418 34.4148 47.9714 34.8808C48.8047 35.3428 49.4449 36.0076 49.8918 36.8751C50.3388 37.7425 50.5623 38.7804 50.5623 39.9887C50.5623 41.2008 50.337 42.2425 49.8862 43.1137C49.4392 43.9849 48.7934 44.6535 47.9486 45.1194C47.1078 45.5853 46.0964 45.8182 44.9146 45.8182ZM43.0794 43.9944H44.8123C45.6229 43.9944 46.299 43.8467 46.8407 43.5512C47.3824 43.252 47.7896 42.8068 48.0623 42.216C48.335 41.6212 48.4714 40.8788 48.4714 39.9887C48.4714 39.0985 48.335 38.3599 48.0623 37.7728C47.7896 37.1819 47.3862 36.7406 46.8521 36.4489C46.3218 36.1535 45.6627 36.0057 44.8748 36.0057H43.0794V43.9944Z" fill="#C78D3C"></path><path d="M30.8877 45.8182H28.6377L32.7343 34.1819H35.3366L39.4388 45.8182H37.1888L34.0809 36.5682H33.99L30.8877 45.8182ZM30.9615 41.2557H37.0979V42.9489H30.9615V41.2557Z" fill="#C78D3C"></path><path d="M18.4971 64.8972L16.8 63.2L63.2 16.8L64.8971 18.4971L18.4971 64.8972Z" fill="#C78D3C"></path></svg><h3>Clutter-Free Reading</h3><p>Placeholder text describing this benefit in a line or two.</p></div>
+      <div class="why-card"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.3999 62.4C14.3999 61.9581 14.0417 61.6 13.5999 61.6H9.5999C9.15806 61.6 8.7999 61.9581 8.7999 62.4V71.2H14.3999V62.4ZM16.7999 73.6H6.3999V62.4C6.3999 60.6327 7.83259 59.2 9.5999 59.2H13.5999C15.3672 59.2 16.7999 60.6327 16.7999 62.4V73.6Z" fill="#C78D3C"></path><path d="M28.8 54.4C28.8 53.9581 28.4419 53.6 28 53.6H24C23.5582 53.6 23.2 53.9581 23.2 54.4V71.2H28.8V54.4ZM31.2 73.6H20.8V54.4C20.8 52.6327 22.2328 51.2 24 51.2H28C29.7673 51.2 31.2 52.6327 31.2 54.4V73.6Z" fill="#C78D3C"></path><path d="M43.2 46.4C43.2 45.9581 42.8418 45.6 42.4 45.6H38.4C37.9581 45.6 37.6 45.9581 37.6 46.4V71.2H43.2V46.4ZM45.6 73.6H35.2V46.4C35.2 44.6327 36.6327 43.2 38.4 43.2H42.4C44.1672 43.2 45.6 44.6327 45.6 46.4V73.6Z" fill="#C78D3C"></path><path d="M57.6001 38.4C57.6001 37.9581 57.2419 37.6 56.8001 37.6H52.8001C52.3583 37.6 52.0001 37.9581 52.0001 38.4V71.2H57.6001V38.4ZM60.0001 73.6H49.6001V38.4C49.6001 36.6327 51.0328 35.2 52.8001 35.2H56.8001C58.5674 35.2 60.0001 36.6327 60.0001 38.4V73.6Z" fill="#C78D3C"></path><path d="M72 30.4C72 29.9581 71.6418 29.6 71.2 29.6H67.2C66.7582 29.6 66.4 29.9581 66.4 30.4V71.2H72V30.4ZM74.4 73.6H64V30.4C64 28.6327 65.4327 27.2 67.2 27.2H71.2C72.9673 27.2 74.4 28.6327 74.4 30.4V73.6Z" fill="#C78D3C"></path><path d="M61.953 7.51042C62.1126 6.86723 62.7633 6.47531 63.4065 6.63481L73.8893 9.23522C74.5323 9.39498 74.9243 10.0457 74.7649 10.6887L72.1634 21.1712C72.0038 21.8144 71.3531 22.2064 70.7099 22.0469C70.0668 21.8872 69.6748 21.2365 69.8343 20.5934L71.7375 12.9229L7.81915 51.4279C7.25145 51.7699 6.51402 51.587 6.17204 51.0192C5.83005 50.4515 6.01303 49.7141 6.58072 49.3722L70.4991 10.8671L62.8286 8.96394C62.1855 8.80426 61.7936 8.15354 61.953 7.51042Z" fill="#C78D3C"></path></svg><h3>Keeps You Ahead</h3><p>Placeholder text describing this benefit in a line or two.</p></div>
+    </div>
+    <button class="carousel-arrow next" aria-label="Next card"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="22" viewBox="0 0 13 22" fill="none"><path d="M12.7383 10.833L1.92188 21.6484L0.0166016 19.7432L8.91895 10.8418L8.92773 10.833L0.0175781 1.92285L1.92285 0.0175781L12.7383 10.833Z" fill="#C78D3C" stroke="#F8E7D3" stroke-width="0.025"></path></svg></button>
+  </div>
+  <div class="dots" data-dots-label="Go to slide"></div>
+</section>
+
+<!-- ================= STATS ================= -->
+<div class="stats">
+  <strong id="stats-num">17,868+</strong>
+  <span>Satisfied subscribers and counting</span>
+</div>
+
+<!-- ================= TESTIMONIALS ================= -->
+<section class="testimonials" aria-label="Testimonials">
+  <h2 class="section-title">What Our Readers Say</h2>
+  <div class="carousel" data-carousel>
+    <button class="carousel-arrow prev" aria-label="Previous testimonial"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="22" viewBox="0 0 13 22" fill="none"><path d="M0.0175781 10.833L10.834 21.6484L12.7393 19.7432L3.83691 10.8418L3.82812 10.833L12.7383 1.92285L10.833 0.0175781L0.0175781 10.833Z" fill="#C78D3C" stroke="#F8E7D3" stroke-width="0.025"></path></svg></button>
+    <div class="track">
+      <article class="t-card">
+        <svg class="t-quote" width="36" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M29.5485 8C34.1852 8 37.9367 11.6 37.9367 16C37.9367 20.4 34.143 24 29.5063 24C24.8696 24 21.0759 20.4 21.0759 16C21.0759 7.16 28.6211 0 37.9367 0C37.9367 0 32.4148 1.96 29.5485 8ZM16.8608 16C16.8608 20.4 13.0671 24 8.43038 24C3.79367 24 -3.8147e-06 20.4 -3.8147e-06 16C-3.8147e-06 7.16 7.54519 0 16.8608 0C16.8608 0 11.3389 1.96 8.47253 8C13.1092 8 16.8608 11.6 16.8608 16Z" fill="var(--gold)"></path></svg>
+        <p>Placeholder testimonial. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        <div class="t-author"><span class="avatar">RN</span><span class="t-name">Reader Name</span></div>
+      </article>
+      <article class="t-card">
+        <svg class="t-quote" width="36" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M29.5485 8C34.1852 8 37.9367 11.6 37.9367 16C37.9367 20.4 34.143 24 29.5063 24C24.8696 24 21.0759 20.4 21.0759 16C21.0759 7.16 28.6211 0 37.9367 0C37.9367 0 32.4148 1.96 29.5485 8ZM16.8608 16C16.8608 20.4 13.0671 24 8.43038 24C3.79367 24 -3.8147e-06 20.4 -3.8147e-06 16C-3.8147e-06 7.16 7.54519 0 16.8608 0C16.8608 0 11.3389 1.96 8.47253 8C13.1092 8 16.8608 11.6 16.8608 16Z" fill="var(--gold)"></path></svg>
+        <p>Placeholder testimonial. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p>
+        <div class="t-author"><span class="avatar">RN</span><span class="t-name">Reader Name</span></div>
+      </article>
+      <article class="t-card">
+        <svg class="t-quote" width="36" height="24" viewBox="0 0 38 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M29.5485 8C34.1852 8 37.9367 11.6 37.9367 16C37.9367 20.4 34.143 24 29.5063 24C24.8696 24 21.0759 20.4 21.0759 16C21.0759 7.16 28.6211 0 37.9367 0C37.9367 0 32.4148 1.96 29.5485 8ZM16.8608 16C16.8608 20.4 13.0671 24 8.43038 24C3.79367 24 -3.8147e-06 20.4 -3.8147e-06 16C-3.8147e-06 7.16 7.54519 0 16.8608 0C16.8608 0 11.3389 1.96 8.47253 8C13.1092 8 16.8608 11.6 16.8608 16Z" fill="var(--gold)"></path></svg>
+        <p>Placeholder testimonial. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod.</p>
+        <div class="t-author"><span class="avatar">RN</span><span class="t-name">Reader Name</span></div>
+      </article>
+    </div>
+    <button class="carousel-arrow next" aria-label="Next testimonial"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="22" viewBox="0 0 13 22" fill="none"><path d="M12.7383 10.833L1.92188 21.6484L0.0166016 19.7432L8.91895 10.8418L8.92773 10.833L0.0175781 1.92285L1.92285 0.0175781L12.7383 10.833Z" fill="#C78D3C" stroke="#F8E7D3" stroke-width="0.025"></path></svg></button>
+  </div>
+  <div class="dots" data-dots-label="Go to testimonial"></div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="faq" aria-label="FAQ">
+  <h2 class="section-title">Frequently Asked Questions</h2>
+  <div class="faq-cats" id="faq-cats"><!-- rendered from FAQS below --></div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<div class="contact-wrap">
+  <section class="contact" aria-label="Contact and Support">
+    <div class="contact-title">Facing issues? <b>Contact us</b></div>
+    <div class="contact-links">
+      <a href="#" class="pill"><svg width="18" height="18" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><g clip-path="url(#clip0_10_35)"><path fill-rule="evenodd" clip-rule="evenodd" d="M23.9202 4.06584C21.2885 1.44525 17.7882 0.00132957 14.0588 0C6.37397 0 0.119658 6.21909 0.116984 13.8635C0.115647 16.3072 0.758058 18.6925 1.97804 20.7946L0 27.9796L7.39072 26.0517C9.4269 27.1566 11.7198 27.7383 14.0528 27.739H14.0588C21.7423 27.739 27.9974 21.5192 28 13.8748C28.0013 10.17 26.5527 6.6871 23.9202 4.0665V4.06584ZM14.0588 25.3975H14.0541C11.9751 25.3969 9.93564 24.8411 8.15617 23.7914L7.73299 23.5415L3.34709 24.6856L4.5176 20.4329L4.24218 19.9968C3.08236 18.162 2.46937 16.0413 2.4707 13.8642C2.47338 7.51078 7.67149 2.34138 14.0635 2.34138C17.1586 2.34271 20.0678 3.54266 22.2557 5.72117C24.4437 7.89902 25.6476 10.7949 25.6463 13.8735C25.6436 20.2275 20.4455 25.3969 14.0588 25.3969V25.3975ZM20.4147 16.7673C20.0664 16.5938 18.3538 15.7561 18.0343 15.6405C17.7147 15.5248 17.4828 15.467 17.2508 15.814C17.0189 16.161 16.3511 16.9415 16.1478 17.1721C15.9446 17.4035 15.7414 17.4321 15.3931 17.2585C15.0449 17.085 13.9225 16.7194 12.5915 15.5394C11.5561 14.6206 10.8568 13.4866 10.6536 13.1395C10.4504 12.7925 10.6322 12.605 10.806 12.4329C10.9624 12.2773 11.1543 12.028 11.3287 11.8259C11.5033 11.6238 11.5607 11.4789 11.677 11.2482C11.7934 11.0168 11.7352 10.8148 11.6483 10.6412C11.5614 10.4677 10.8649 8.76253 10.574 8.06918C10.2912 7.39377 10.0039 7.48551 9.79059 7.47421C9.58736 7.46424 9.35542 7.46225 9.12279 7.46225C8.89016 7.46225 8.51309 7.54867 8.19358 7.89569C7.87407 8.24267 6.97426 9.08097 6.97426 10.7855C6.97426 12.49 8.22236 14.1381 8.39681 14.3694C8.57127 14.6008 10.8534 18.0995 14.3476 19.6006C15.1786 19.9576 15.8276 20.171 16.3336 20.3306C17.168 20.5945 17.9273 20.5573 18.5276 20.4682C19.1968 20.3685 20.5886 19.6299 20.8787 18.8208C21.1688 18.0117 21.1688 17.3177 21.0819 17.1734C20.995 17.0292 20.7624 16.9421 20.4141 16.7686L20.4147 16.7673Z" fill="#25D366"></path></g><defs><clipPath id="clip0_10_35"><rect width="28" height="28" fill="white"></rect></clipPath></defs></svg><span id="contact-phone">+91 9035267305</span></a>
+      <a href="#" class="pill mail"><svg width="16" height="12" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M2 16C1.45 16 0.979167 15.8042 0.5875 15.4125C0.195833 15.0208 0 14.55 0 14V2C0 1.45 0.195833 0.979167 0.5875 0.5875C0.979167 0.195833 1.45 0 2 0H18C18.55 0 19.0208 0.195833 19.4125 0.5875C19.8042 0.979167 20 1.45 20 2V14C20 14.55 19.8042 15.0208 19.4125 15.4125C19.0208 15.8042 18.55 16 18 16H2ZM10 9L2 4V14H18V4L10 9ZM10 7L18 2H2L10 7ZM2 4V2V14V4Z" fill="#000"></path></svg><span id="contact-email">support@deccanherald.com</span></a>
+    </div>
+    <div class="hours"><b>Working Hours</b><span>Mon - Fri : 10:00 AM to 6:00 PM</span></div>
+  </section>
+</div>
+
+<script>
+  /* ============================================================
+     CONTENT PER BRAND — edit here; the page renders from this.
+     Each brand has one or more "offerings" (PV shows them as tabs).
+     Plan fields: `days` drives the per-day price, `was` (optional) is the
+     struck-through price, `extras` = what's specific to that plan
+     (benefits shared by every plan in the offering go in `included`).
+     ============================================================ */
+  // Website benefits paired, then e-paper benefits (pairs share a row on mobile)
+  const NEWS_INCLUDED = ["Premium articles", "Ad-lite reading", "E-paper by 5 AM", "All city editions"];
+
+  const BRANDS = {
+    dh: {
+      name: "Deccan Herald", premium: "DH Premium",
+      title: "Subscribe to DH Premium",
+      stats: "17,868+",
+      phone: "+91 9035267305", email: "support@deccanherald.com",
+      offerings: [{
+        id: "premium", label: "DH Premium", included: NEWS_INCLUDED,
+        plans: [
+          { id: "6m", name: "6 Months", price: 999,  was: 1299, period: "6 months", days: 180, extras: ["6-month e-paper archive"] },
+          { id: "1y", name: "1 Year",   price: 1299, was: 1999, period: "year",     days: 365, extras: ["1-year archive", "7-day refund"], tag: "Most popular", selected: true },
+          { id: "2y", name: "2 Years",  price: 2099, was: 2999, period: "2 years",  days: 730, extras: ["2-year archive", "7-day refund"] },
+        ],
+      }],
+    },
+    pv: {
+      name: "Prajavani", premium: "Prajavani Premium",
+      title: "Subscribe to Prajavani",
+      stats: "XX,XXX+",                                         // placeholder
+      phone: "+91 00000 00000", email: "support@example.com", // placeholders
+      offerings: [
+        {
+          id: "premium", label: "Prajavani Premium",
+          included: ["Premium articles", "Ad-lite reading", "E-paper by 5 AM", "All 32 city editions"],
+          plans: [
+            { id: "1m", name: "Monthly Digital", price: 149,  was: 249,  period: "month",   days: 30,  extras: [] },
+            { id: "1y", name: "1 Year Digital",  price: 999,  was: 1999, period: "year",    days: 365, extras: ["1-year archive", "7-day refund"], tag: "Most popular", selected: true },
+            { id: "2y", name: "2 Years Digital", price: 1899, was: 2999, period: "2 years", days: 730, extras: ["2-year archive", "7-day refund"] },
+          ],
+        },
+        {
+          id: "emag", label: "E-Magazines",
+          included: ["Every new issue", "Mobile & desktop", "E-magazine & web view", "Offline reading"],
+          plans: [                                                       // prices are placeholders
+            { id: "sudha",  name: "Sudha 1 Year",          price: 499, period: "year", days: 365, extras: ["1-year archive"] },
+            { id: "mayura", name: "Mayura 1 Year",         price: 499, period: "year", days: 365, extras: ["1-year archive"] },
+            { id: "combo",  name: "Sudha + Mayura 1 Year", price: 899, was: 998, period: "year", days: 365, extras: ["18-month archive of both magazines"], selected: true },
+          ],
+        },
+      ],
+    },
+  };
+
+  /* FAQ — questions from the live page with brand tokens, placeholder answers.
+     {name} = Deccan Herald / Prajavani, {premium} = DH Premium / Prajavani Premium */
+  const PLACEHOLDER = "Placeholder answer. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+  const FAQS = [
+    ["{name} Premium", [
+      "How can I buy a monthly {name} Premium/E-paper subscription?",
+      "What is {premium}?",
+      "Is E-paper part of my Subscription?",
+      "How can I log in to the {name} Premium?",
+      "How do I access Premium articles?",
+    ]],
+    ["Registration and Subscription", [
+      "How do I subscribe to the {premium}?",
+      "How can I check my subscription details?",
+      "What will happen to my subscription after my subscription period ends?",
+      "How do I change my payment method for recurring subscription?",
+      "What happens if I cancel my subscription?",
+    ]],
+    ["Payments and Refund", [
+      "I don’t want my subscription anymore. Can I get a refund?",
+      "Which payment modes are accepted?",
+    ]],
+    ["Accessing E-Paper", [
+      "Can I access older editions of the E-Paper?",
+      "Can I download the E-paper articles?",
+      "Can I download a full E-Paper?",
+      "How can I share articles with others?",
+      "How can I save the articles?",
+      "I do not have a subscription. Can I still read the E-Paper?",
+    ]],
+  ];
+
+  const CHECK = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7.5l3 3 7-7" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const PLUS = '<svg class="plus" width="10" height="11" viewBox="0 0 10 11" fill="none" aria-hidden="true"><path d="M5 0V11M0 5.5H10" stroke="var(--gold)" stroke-width="1.5"/></svg>';
+  const MINUS = '<svg class="minus" width="10" height="11" viewBox="0 0 10 11" fill="none" aria-hidden="true"><path d="M0 5.5H10" stroke="var(--gold)" stroke-width="1.5"/></svg>';
+  const perDay = (p) => (Math.floor((p.price / p.days) * 100) / 100).toFixed(2);
+
+  const $ = (id) => document.getElementById(id);
+  const cta = $("plan-cta");
+  const tabsEl = $("offer-tabs");
+  let brand, offering;
+
+  /* ---- Plans for the current offering ---- */
+  function renderOffering() {
+    $("included-list").innerHTML = offering.included.map((b) => `<li>${CHECK}${b}</li>`).join("");
+    $("plan-options").querySelectorAll(".opt").forEach((el) => el.remove());
+    $("plan-options").insertAdjacentHTML("beforeend", offering.plans.map((p) => `
+      <label class="opt">
+        <input type="radio" name="plan" value="${p.id}"${p.selected ? " checked" : ""}>
+        <span class="radio" aria-hidden="true"></span>
+        <span class="opt-head"><span class="opt-name">${p.name}</span>${p.tag ? `<span class="opt-tag">${p.tag}</span>` : ""}</span>
+        <span class="opt-price">₹${p.price} <small>/ ${p.period}</small></span>
+        ${p.was ? `<span class="opt-strike">₹${p.was}</span>` : ""}
+        <span class="opt-perday">For ₹${perDay(p)}/day</span>
+        ${p.extras.length ? `<span class="opt-extras">+ ${p.extras.join(" · ")}</span>` : ""}
+      </label>`).join(""));
+    document.querySelectorAll('input[name="plan"]').forEach((r) => r.addEventListener("change", syncCta));
+    syncCta();
+  }
+
+  function syncCta() {
+    const p = offering.plans.find((x) => x.id === document.querySelector('input[name="plan"]:checked').value);
+    cta.textContent = `Subscribe for ₹${p.price}`;
+    cta.dataset.plan = `${offering.id}:${p.id}`;
+  }
+
+  /* ---- Offering tabs (only shown when a brand has more than one) ---- */
+  function renderTabs() {
+    tabsEl.hidden = brand.offerings.length < 2;
+    tabsEl.innerHTML = brand.offerings.map((o) =>
+      `<button type="button" role="tab" data-offering="${o.id}" aria-selected="${o === offering}" aria-controls="plan-options">${o.label}</button>`).join("");
+  }
+  tabsEl.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-offering]");
+    if (!b) return;
+    offering = brand.offerings.find((o) => o.id === b.dataset.offering);
+    renderTabs();
+    renderOffering();
+  });
+
+  /* ---- FAQ ---- */
+  function renderFaq() {
+    const fill = (s) => s.replaceAll("{name}", brand.name).replaceAll("{premium}", brand.premium);
+    let n = 0;
+    $("faq-cats").innerHTML = FAQS.map(([cat, qs]) => `
+      <div class="faq-cat">
+        <h3>${fill(cat)}</h3>
+        <div class="faq-list">
+          ${qs.map((q) => { n++; return `
+            <div class="faq-item">
+              <button class="faq-toggle" aria-expanded="false" aria-controls="faq-${n}">
+                <span class="faq-q">${fill(q)}</span>
+                <span class="faq-icon">${PLUS}${MINUS}</span>
+              </button>
+              <div class="faq-answer" id="faq-${n}"><div><p>${PLACEHOLDER}</p></div></div>
+            </div>`; }).join("")}
+        </div>
+      </div>`).join("");
+  }
+  $("faq-cats").addEventListener("click", (e) => {
+    const btn = e.target.closest(".faq-toggle");
+    if (!btn) return;
+    const open = btn.parentElement.classList.toggle("open");
+    btn.setAttribute("aria-expanded", open);
+  });
+
+  /* ---- Master DH / PV switch ---- */
+  function setBrand(key) {
+    brand = BRANDS[key];
+    offering = brand.offerings[0];
+    document.title = `${brand.title} — Prototype`;
+    $("hero-title").textContent = brand.title;
+    $("why-title").textContent = `Why Choose ${brand.premium}?`;
+    $("stats-num").textContent = brand.stats;
+    $("contact-phone").textContent = brand.phone;
+    $("contact-email").textContent = brand.email;
+    document.querySelectorAll(".brand-switch button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.brand === key));
+    history.replaceState(null, "", `#${key}`);
+    renderTabs();
+    renderOffering();
+    renderFaq();
+  }
+  document.querySelectorAll(".brand-switch button").forEach((b) => b.addEventListener("click", () => setBrand(b.dataset.brand)));
+  setBrand(location.hash === "#pv" ? "pv" : "dh");
+
+  /* ============================================================
+     CAROUSELS — same behaviour as the live page:
+     autoplay every 4s (wraps to start), pause on hover,
+     touch/drag/wheel pauses and resumes after 4s,
+     active dot = card nearest the scroll position.
+     ============================================================ */
+  document.querySelectorAll("[data-carousel]").forEach((carousel) => {
+    const track = carousel.querySelector(".track");
+    const cards = [...track.children];
+    const dotsEl = carousel.nextElementSibling;
+    const label = dotsEl.dataset.dotsLabel;
+    const step = () => (cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : track.clientWidth);
+
+    dotsEl.innerHTML = cards.map((_, i) => `<button aria-label="${label} ${i + 1}"></button>`).join("");
+    const dots = [...dotsEl.children];
+
+    const goTo = (i) => {
+      const c = cards[i];
+      track.scrollTo({ left: c.offsetLeft - track.offsetLeft + c.offsetWidth / 2 - track.clientWidth / 2, behavior: "smooth" });
+    };
+    const next = () => {
+      if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 10) track.scrollTo({ left: 0, behavior: "smooth" });
+      else track.scrollBy({ left: step(), behavior: "smooth" });
+    };
+    const prev = () => {
+      if (track.scrollLeft <= 10) track.scrollTo({ left: track.scrollWidth, behavior: "smooth" });
+      else track.scrollBy({ left: -step(), behavior: "smooth" });
+    };
+
+    const updateDots = () => {
+      const base = cards[0].offsetLeft;
+      let active = 0, best = Infinity;
+      cards.forEach((c, i) => {
+        const d = Math.abs(c.offsetLeft - base - track.scrollLeft);
+        if (d < best) { best = d; active = i; }
+      });
+      if (Math.ceil(track.scrollLeft + track.clientWidth) >= track.scrollWidth - 2) active = cards.length - 1;
+      dots.forEach((d, i) => d.classList.toggle("active", i === active));
+    };
+
+    let timer, resume;
+    const start = () => { clearInterval(timer); timer = setInterval(next, 4000); };
+    const stop = () => clearInterval(timer);
+    const pauseThenResume = () => { stop(); clearTimeout(resume); resume = setTimeout(start, 4000); };
+
+    carousel.querySelector(".prev").addEventListener("click", prev);
+    carousel.querySelector(".next").addEventListener("click", next);
+    dots.forEach((d, i) => d.addEventListener("click", () => { goTo(i); pauseThenResume(); }));
+    carousel.addEventListener("mouseenter", stop);
+    carousel.addEventListener("mouseleave", start);
+    ["mousedown", "touchstart", "touchmove", "wheel"].forEach((e) => carousel.addEventListener(e, pauseThenResume, { passive: true }));
+    track.addEventListener("scroll", updateDots, { passive: true });
+
+    updateDots();
+    start();
+  });
+</script>
+</body>
+</html>
