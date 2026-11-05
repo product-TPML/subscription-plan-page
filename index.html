@@ -68,6 +68,8 @@
   .included ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 28px; }
   .included li { display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 22px; }
   .included li svg { flex-shrink: 0; }
+  .inc-ico { width: 24px; height: 24px; flex-shrink: 0; object-fit: contain; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 16px 0 0; padding: 0; border: 0; }
   .options legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -87,6 +89,11 @@
   .opt:has(input:checked) .radio { border-color: var(--gold); }
   .opt:has(input:checked) .radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--gold); }
   .opt-head { display: flex; align-items: center; gap: 10px; }
+  .opt-logos { display: flex; align-items: center; gap: 12px; min-height: 40px; padding-right: 34px; }
+  .opt-logos img { display: block; height: 32px; width: auto; max-width: 100%; }
+  .opt-logos.combo { gap: 8px; }
+  .opt-logos.combo img { height: 26px; }
+  .opt-logos .plus { color: var(--faded-gray); font: 400 20px/1 var(--slab); }
   .opt-name { font-size: 18px; font-weight: 700; line-height: 26px; }
   .opt-tag {
     padding: 2px 8px; border-radius: 12px; background: var(--gold); color: var(--white);
@@ -215,6 +222,11 @@
     .included h2 { margin-bottom: 6px; font-size: 14px; }
     .included ul { display: grid; grid-template-columns: repeat(2, max-content); gap: 2px 12px; justify-content: space-between; }
     .included li { font-size: 13px; line-height: 20px; }
+    .inc-ico { width: 22px; height: 22px; }
+    .opt-logos { min-height: 0; padding-right: 0; gap: 8px; }
+    .opt-logos img { height: 24px; }
+    .opt-logos.combo img { height: 20px; }
+    .opt-logos .plus { font-size: 16px; }
     .options { grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
     .opt {
       display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "radio head price" "radio meta strike" "radio extras extras";
@@ -274,7 +286,7 @@
 
 <!-- ================= HERO ================= -->
 <section class="hero">
-  <img class="premium-badge" src="premium%20tag.svg" alt="Premium" width="135" height="28">
+  <img class="premium-badge" src="Assets/premium%20tag.svg" alt="Premium" width="135" height="28">
   <h1 id="hero-title">Subscribe to DH Premium</h1>
   <p>Choose the plan that works best for you</p>
   <div class="offer-tabs" id="offer-tabs" role="tablist" aria-label="Offerings" hidden></div>
@@ -372,7 +384,12 @@
      (benefits shared by every plan in the offering go in `included`).
      ============================================================ */
   // Website benefits paired, then e-paper benefits (pairs share a row on mobile)
-  const NEWS_INCLUDED = ["Premium articles", "Ad-lite reading", "E-paper by 5 AM", "All city editions"];
+  // [label, icon file in Assets/] — no icon = falls back to a tick
+  const NEWS_INCLUDED = [
+    ["Premium articles", "premium articles.svg"], ["Ad-lite reading", "no ads.png"],
+    ["E-paper by 5 AM", "epaper.png"], ["All city editions", "all editions.svg"],
+  ];
+  const LOGOS = { sudha: "Assets/Sudha.svg", mayura: "Assets/Mayura.svg" };
 
   const BRANDS = {
     dh: {
@@ -397,7 +414,7 @@
       offerings: [
         {
           id: "premium", label: "Prajavani Premium",
-          included: ["Premium articles", "Ad-lite reading", "E-paper by 5 AM", "All 32 city editions"],
+          included: NEWS_INCLUDED.map(([t, i]) => [t === "All city editions" ? "All 32 city editions" : t, i]),
           plans: [
             { id: "1m", name: "Monthly Digital", price: 149,  was: 249,  period: "month",   days: 30,  extras: [] },
             { id: "1y", name: "1 Year Digital",  price: 999,  was: 1999, period: "year",    days: 365, extras: ["1-year archive", "7-day refund"], tag: "Most popular", selected: true },
@@ -406,11 +423,14 @@
         },
         {
           id: "emag", label: "E-Magazines",
-          included: ["Every new issue", "Mobile & desktop", "E-magazine & web view", "Offline reading"],
+          included: [
+            ["Every new issue", "premium articles.svg"], ["Mobile & desktop", "mobile and desktop.png"],
+            ["E-magazine & web view", "magazine.png"], ["Offline reading", "offline.png"],
+          ],
           plans: [                                                       // prices are placeholders
-            { id: "sudha",  name: "Sudha 1 Year",          price: 499, period: "year", days: 365, extras: ["1-year archive"] },
-            { id: "mayura", name: "Mayura 1 Year",         price: 499, period: "year", days: 365, extras: ["1-year archive"] },
-            { id: "combo",  name: "Sudha + Mayura 1 Year", price: 899, was: 998, period: "year", days: 365, extras: ["18-month archive of both magazines"], selected: true },
+            { id: "sudha",  logos: ["sudha"],           name: "Sudha 1 Year",          price: 499, period: "year", days: 365, extras: ["1-year archive"] },
+            { id: "mayura", logos: ["mayura"],          name: "Mayura 1 Year",         price: 499, period: "year", days: 365, extras: ["1-year archive"] },
+            { id: "combo",  logos: ["sudha", "mayura"], name: "Sudha + Mayura 1 Year", price: 899, was: 998, period: "year", days: 365, extras: ["18-month archive of both magazines"], selected: true },
           ],
         },
       ],
@@ -461,13 +481,15 @@
 
   /* ---- Plans for the current offering ---- */
   function renderOffering() {
-    $("included-list").innerHTML = offering.included.map((b) => `<li>${CHECK}${b}</li>`).join("");
+    $("included-list").innerHTML = offering.included.map(([t, i]) => `<li>${i ? `<img class="inc-ico" src="${encodeURI("Assets/" + i)}" alt="" width="24" height="24">` : CHECK}${t}</li>`).join("");
     $("plan-options").querySelectorAll(".opt").forEach((el) => el.remove());
     $("plan-options").insertAdjacentHTML("beforeend", offering.plans.map((p) => `
       <label class="opt">
         <input type="radio" name="plan" value="${p.id}"${p.selected ? " checked" : ""}>
         <span class="radio" aria-hidden="true"></span>
-        <span class="opt-head"><span class="opt-name">${p.name}</span>${p.tag ? `<span class="opt-tag">${p.tag}</span>` : ""}</span>
+        <span class="opt-head">${p.logos
+          ? `<span class="opt-logos${p.logos.length > 1 ? " combo" : ""}">${p.logos.map((l) => `<img src="${LOGOS[l]}" alt="">`).join('<span class="plus" aria-hidden="true">+</span>')}</span><span class="sr-only">${p.name}</span>`
+          : `<span class="opt-name">${p.name}</span>`}${p.tag ? `<span class="opt-tag">${p.tag}</span>` : ""}</span>
         <span class="opt-price">₹${p.price} <small>/ ${p.period}</small></span>
         ${p.was ? `<span class="opt-strike">₹${p.was}</span>` : ""}
         <span class="opt-perday">For ₹${perDay(p)}/day</span>
