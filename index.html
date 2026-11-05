@@ -49,22 +49,32 @@
 
   /* ---------- Offering tabs (PV: Premium / E-Magazines) ---------- */
   .offer-tabs {
-    display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 24px;
-    background: var(--light-beige); border: 1px solid var(--beige); border-radius: 8px;
+    --tab-red: #942A2A;
+    position: relative; display: inline-flex; gap: 4px; padding: 5px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(148,42,42,.12);
+    background: rgba(148,42,42,.09); border: 1px solid rgba(148,42,42,.28); border-radius: 8px;
   }
+  /* sliding selector: moved by JS to sit under the selected tab */
+  .tab-pill {
+    position: absolute; top: 0; left: 0; z-index: 0; border-radius: 6px; background: var(--tab-red);
+    box-shadow: 0 1px 4px rgba(148,42,42,.35); pointer-events: none;
+    transition: transform .35s cubic-bezier(.4,0,.2,1), width .35s cubic-bezier(.4,0,.2,1);
+  }
+  .tab-pill.no-anim { transition: none; }
   .offer-tabs[hidden] { display: none; }
   .offer-tabs button {
-    appearance: none; padding: 9px 22px; border: 1px solid transparent; border-radius: 6px; cursor: pointer;
-    background: transparent; color: var(--faded-gray); font: 600 15px var(--slab);
+    appearance: none; position: relative; z-index: 1; padding: 12px 30px; border: 1px solid transparent; border-radius: 6px; cursor: pointer;
+    background: transparent; color: var(--tab-red); font: 700 16px var(--slab); transition: color .3s;
   }
-  .offer-tabs button[aria-selected="true"] { background: var(--white); border-color: var(--gold); color: var(--black); }
+  .offer-tabs button[aria-selected="true"] { color: var(--white); }
+  .offer-tabs button:focus-visible { outline: 2px solid var(--tab-red); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .tab-pill { transition: none; } }
   .hero:has(.offer-tabs:not([hidden])) p { padding-bottom: 16px; }
 
   /* ---------- Plan picker: shared benefits first, then selectable plans, one CTA ---------- */
   .picker { max-width: 1018px; margin: 0 auto; padding: 0 20px; font-family: var(--slab); color: var(--black); }
 
-  .included { padding: 14px 20px; background: var(--light-beige); border: 1px solid var(--beige); border-radius: 6px; }
-  .included h2 { margin-bottom: 8px; font: 700 15px var(--slab); text-align: center; }
+  .included { padding: 12px 20px; background: #fbf8f3; border: 1px solid var(--light-beige); border-radius: 6px; }
+  .included h2 { margin-bottom: 8px; font: 600 11px var(--slab); text-align: center; text-transform: uppercase; letter-spacing: .08em; color: var(--faded-gray); }
   .included ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 28px; }
   .included li { display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 22px; }
   .included li svg { flex-shrink: 0; }
@@ -213,13 +223,13 @@
     .brand-switch { top: 16px; transform: none; flex-direction: row; }
     .brand-switch button { width: 34px; height: 32px; font-size: 12px; }
     .offer-tabs { display: flex; width: 100%; margin-bottom: 16px; }
-    .offer-tabs button { flex: 1; padding: 8px 6px; font-size: 14px; }
+    .offer-tabs button { flex: 1; padding: 10px 6px; font-size: 15px; }
     .hero:has(.offer-tabs:not([hidden])) p { padding-bottom: 10px; }
 
     /* Plan picker on mobile: compact rows, so benefits + all plans + CTA fit the first screen */
     .picker { padding: 0 16px; }
     .included { padding: 10px 12px; }
-    .included h2 { margin-bottom: 6px; font-size: 14px; }
+    .included h2 { margin-bottom: 6px; font-size: 11px; }
     .included ul { display: grid; grid-template-columns: repeat(2, max-content); gap: 2px 12px; justify-content: space-between; }
     .included li { font-size: 13px; line-height: 20px; }
     .inc-ico { width: 22px; height: 22px; }
@@ -508,14 +518,26 @@
   /* ---- Offering tabs (only shown when a brand has more than one) ---- */
   function renderTabs() {
     tabsEl.hidden = brand.offerings.length < 2;
-    tabsEl.innerHTML = brand.offerings.map((o) =>
+    tabsEl.innerHTML = '<span class="tab-pill" aria-hidden="true"></span>' + brand.offerings.map((o) =>
       `<button type="button" role="tab" data-offering="${o.id}" aria-selected="${o === offering}" aria-controls="plan-options">${o.label}</button>`).join("");
+    movePill(false);
   }
+  /* Slide the pill under the selected tab (animate = false snaps it into place) */
+  function movePill(animate = true) {
+    const pill = tabsEl.querySelector(".tab-pill"), sel = tabsEl.querySelector('[aria-selected="true"]');
+    if (!pill || !sel || tabsEl.hidden) return;
+    pill.classList.toggle("no-anim", !animate);
+    pill.style.width = sel.offsetWidth + "px";
+    pill.style.height = sel.offsetHeight + "px";
+    pill.style.transform = `translate(${sel.offsetLeft}px, ${sel.offsetTop}px)`;
+  }
+  window.addEventListener("resize", () => movePill(false));
   tabsEl.addEventListener("click", (e) => {
     const b = e.target.closest("[data-offering]");
     if (!b) return;
     offering = brand.offerings.find((o) => o.id === b.dataset.offering);
-    renderTabs();
+    tabsEl.querySelectorAll("[data-offering]").forEach((t) => t.setAttribute("aria-selected", t === b));
+    movePill();
     renderOffering();
   });
 
