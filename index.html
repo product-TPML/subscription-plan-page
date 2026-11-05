@@ -115,8 +115,15 @@
   .opt-perday { font-size: 13px; color: var(--faded-gray); }
   .opt-extras { margin-top: 6px; color: var(--gold); font-size: 13px; font-weight: 600; line-height: 20px; }
 
+  /* Sticks to the bottom of the viewport while plans are on screen; at the end of the picker it
+     stops sticking and scrolls away with the last plan. */
+  .cta-bar {
+    position: sticky; bottom: 0; z-index: 5; margin-top: 8px;
+    padding: 16px 0 max(12px, env(safe-area-inset-bottom));
+    background: linear-gradient(to bottom, rgba(255,255,255,0), var(--white) 16px);
+  }
   .cta {
-    display: flex; justify-content: center; align-items: center; width: 100%; max-width: 360px; margin: 20px auto 0;
+    display: flex; justify-content: center; align-items: center; width: 100%; max-width: 360px; margin: 0 auto;
     padding: 15px 10px; border: 1px solid var(--gold); border-radius: 6px; background: var(--yellow); color: var(--black);
     font: 700 16px/22px var(--slab); text-decoration: none; cursor: pointer;
   }
@@ -251,7 +258,7 @@
     .opt-perday { grid-area: meta; font-size: 12px; }
     .opt-strike { grid-area: strike; font-size: 12px; text-align: right; }
     .opt-extras { grid-area: extras; margin-top: 2px; font-size: 12px; line-height: 18px; }
-    .cta { max-width: none; margin-top: 12px; }
+    .cta { max-width: none; }
 
     .section-title { font-size: 18px; margin-bottom: 20px; }
     .carousel-arrow { display: none; }
@@ -314,7 +321,7 @@
     <!-- rendered from PLANS below -->
   </fieldset>
 
-  <a href="#" class="cta" id="plan-cta">Subscribe</a>
+  <div class="cta-bar"><a href="#" class="cta" id="plan-cta">Subscribe</a></div>
 </section>
 
 <!-- ================= WHY CHOOSE ================= -->
@@ -413,6 +420,10 @@
           { id: "6m", name: "6 Months", price: 999,  was: 1299, period: "6 months", days: 180, extras: ["6-month e-paper archive"] },
           { id: "1y", name: "1 Year",   price: 1299, was: 1999, period: "year",     days: 365, extras: ["1-year archive", "7-day refund"], tag: "Most popular", selected: true },
           { id: "2y", name: "2 Years",  price: 2099, was: 2999, period: "2 years",  days: 730, extras: ["2-year archive", "7-day refund"] },
+          // TEMP mock plans — only to test the sticky Subscribe button with a long plan list
+          { id: "m1", name: "Mock 1", price: 1499, period: "year", days: 365, extras: ["Hatchback · 5 seats · Petrol · 22 kmpl"] },
+          { id: "m2", name: "Mock 2", price: 1799, period: "year", days: 365, extras: ["Sedan · 5 seats · Diesel · 20 kmpl"] },
+          { id: "m3", name: "Mock 3", price: 2299, period: "year", days: 365, extras: ["SUV · 7 seats · Diesel · 16 kmpl"] },
         ],
       }],
     },
