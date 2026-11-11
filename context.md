@@ -33,7 +33,7 @@ There is no build step, framework or package manager. Open `index.html` in a bro
 8. **FAQ**: categories with an accordion. Questions use the tokens `{name}` / `{premium}`; the answers are lorem-ipsum placeholders.
 9. **Contact**: phone and email pills, plus working hours.
 10. **Subscribe dock** (`#cta-dock`): fixed to the bottom of the viewport for the whole page, kept in sync with the selected plan by `syncCta()`.
-    - **Desktop**: one bar holding three things. On the left, a small "Selected:" label above the plan name; the name is 19px and wraps at 180px. Price, tag and per-day price are deliberately left out. In the middle, `.dock-inc` shows the shared benefits as a 2×2 block with icons, at full width. Next to it, `.dock-extras` shows the plan's extras in gold; that column takes the remaining space (140–220px) and wraps its text. On the right, the 220px "Subscribe for ₹X" CTA.
+    - **Desktop**: kept deliberately simple. On the left, a small "Selected:" label above the plan name (19px). On the right, the 220px "Subscribe for ₹X" CTA. Price, tag, per-day price and benefits are left out on purpose; an earlier version listed the benefits and was too cluttered.
     - **Mobile**: a full-width CTA. An IntersectionObserver on `#plan-options` adds `.away` to the dock once the plans scroll out of view. A one-line summary then slides in above the button: plan name, per-day price, and a "Change plan" link that scrolls to the top and focuses the selected radio.
     - JS keeps `--dock-h` equal to the dock's height, and `body` uses it as bottom padding so the dock never covers the end of the page.
 

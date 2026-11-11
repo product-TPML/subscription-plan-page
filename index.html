@@ -148,7 +148,7 @@
   .opt-extras { margin-top: 6px; color: var(--gold); font-size: 13px; font-weight: 600; line-height: 20px; }
 
   /* ---------- Subscribe dock: fixed to the bottom of the viewport for the whole page ----------
-     Desktop: selected plan (name, price) | its benefits | Subscribe CTA, in one bar.
+     Desktop: "Selected: <plan name>" on the left, Subscribe CTA on the right.
      Mobile: a full-width Subscribe button; once the plans scroll out of view, a one-line
      summary of the selected plan with "Change plan" slides in above it. */
   body { padding-bottom: var(--dock-h, 0px); }   /* --dock-h is kept in sync by JS so the page end isn't hidden */
@@ -159,11 +159,11 @@
     font-family: var(--slab); color: var(--black);
   }
   .dock-inner {
-    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 28px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 28px;
     max-width: 1018px; margin: 0 auto; padding: 12px 20px;
   }
   .dock-label { font-size: 12px; line-height: 16px; color: var(--faded-gray); }
-  .dock-name { max-width: 180px; font-size: 19px; font-weight: 700; line-height: 24px; }   /* long names wrap to 2 lines */
+  .dock-name { font-size: 19px; font-weight: 700; line-height: 24px; }
   .dock-price { display: flex; align-items: baseline; gap: 6px; font-size: 13px; color: var(--faded-gray); white-space: nowrap; }
   .dock-price b { font-size: 20px; line-height: 28px; color: var(--black); }
   .dock-price s { margin-left: 2px; color: #999; }
@@ -177,17 +177,6 @@
     color: var(--gold); font: 600 13px/24px var(--slab); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap;
   }
   .dock-change:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 3px; }
-  /* Benefits: shared benefits as a 2×2 block, then this plan's extras in gold.
-     The shared block keeps its full width; the extras column takes what's left (140–220px), wrapping its text.
-     Only if even that doesn't fit do the shared benefits shorten, with an ellipsis. */
-  .dock-benefits { display: flex; align-items: center; gap: 22px; min-width: 0; padding-left: 28px; border-left: 1px solid var(--beige); }
-  .dock-benefits ul { list-style: none; margin: 0; padding: 0; }
-  .dock-inc { flex: 0 0 auto; max-width: calc(100% - 162px); display: grid; grid-template-columns: repeat(2, minmax(0, max-content)); gap: 4px 22px; }
-  .dock-inc li { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 13px; line-height: 22px; white-space: nowrap; }
-  .dock-inc li > span { overflow: hidden; text-overflow: ellipsis; }
-  .dock-inc .inc-ico { width: 18px; height: 18px; }
-  .dock-extras { flex: 0 1 auto; min-width: 140px; max-width: 220px; display: grid; gap: 4px; color: var(--gold); font-size: 13px; font-weight: 600; line-height: 18px; }
-  .dock-extras:empty { display: none; }
   .cta {
     display: flex; justify-content: center; align-items: center; width: 220px;
     padding: 15px 10px; border: 1px solid var(--gold); border-radius: 6px; background: var(--yellow); color: var(--black);
@@ -397,7 +386,7 @@
 
     /* Dock on mobile: summary line (collapsed until the plans are off screen) + full-width button */
     .dock-inner { grid-template-columns: 1fr; gap: 0; padding: 10px 16px; }
-    .dock-benefits, .dock-label, .dock-price b, #dock-period, .dock-price s { display: none; }
+    .dock-label, .dock-price b, #dock-period, .dock-price s { display: none; }
     .dock-plan { max-height: 0; overflow: hidden; opacity: 0; transition: max-height .25s ease, opacity .2s ease; }
     .cta-dock.away .dock-plan { max-height: 40px; opacity: 1; }
     .dock-plan-in { display: flex; align-items: center; gap: 0; padding-bottom: 8px; }
@@ -544,10 +533,6 @@
         <div class="dock-price"><b id="dock-price"></b><span id="dock-period"></span><s id="dock-was"></s><span id="dock-perday"></span></div>
         <button type="button" class="dock-change" id="dock-change">Change plan</button>
       </div>
-    </div>
-    <div class="dock-benefits" role="group" aria-label="What you get">
-      <ul class="dock-inc" id="dock-inc"></ul>
-      <ul class="dock-extras" id="dock-extras"></ul>
     </div>
     <a href="#" class="cta" id="plan-cta">Subscribe</a>
   </div>
@@ -718,14 +703,12 @@
     const p = offering.plans.find((x) => x.id === document.querySelector('input[name="plan"]:checked').value);
     cta.textContent = `Subscribe for ₹${p.price}`;
     cta.dataset.plan = `${offering.id}:${p.id}`;
-    // Dock: selected plan + everything it includes (shared benefits, then this plan's extras)
+    // Dock: selected plan
     $("dock-name").textContent = p.name;
     $("dock-price").textContent = `₹${p.price}`;
     $("dock-period").textContent = `/ ${p.period}`;
     $("dock-was").textContent = p.was ? `₹${p.was}` : "";
     $("dock-perday").textContent = `₹${perDay(p)}/day`;
-    $("dock-inc").innerHTML = offering.included.map(incLi).join("");
-    $("dock-extras").innerHTML = p.extras.map((e) => `<li>+ ${e}</li>`).join("");
   }
 
   /* ---- Dock: keep page padding equal to its height; flag when the plans are off screen ---- */
